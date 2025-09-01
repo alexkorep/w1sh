@@ -12,7 +12,7 @@ export default function Chat(): JSX.Element {
     --bg:#0f141a; --panel:#141b22; --panel-2:#0b1117; --accent:#2f81f7; --accent-2:#1e5fd6;
     --text:#e6edf3; --muted:#9aa7b4; --you:#1e2a38; --them:#1f2f1f; --border:#22303c;
     --shadow:0 10px 30px rgba(0,0,0,.35); --radius:16px;
-    height:100%; background:linear-gradient(180deg,#0b1117,#0e151c 40%,#0b1117);
+    height:100%; width:100%; background:linear-gradient(180deg,#0b1117,#0e151c 40%,#0b1117);
     color:var(--text); font:16px/1.4 system-ui,-apple-system,Segoe UI,Roboto,Inter,"Helvetica Neue",Arial;
     display:flex; flex-direction:column;
   }
