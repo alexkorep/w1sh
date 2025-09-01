@@ -2,7 +2,11 @@ import './App.css'
 import Chat from './pages/Chat'
 
 function App() {
-  return <Chat />
+  return (
+    <div className="app-container">
+      <Chat />
+    </div>
+  )
 }
 
 export default App

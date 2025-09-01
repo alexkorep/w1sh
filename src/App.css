@@ -1,3 +1,5 @@
-.card {
-  padding: 2em;
+.app-container {
+  width: min(100vw, calc(100vh * 9 / 16));
+  aspect-ratio: 9 / 16;
+  display: flex;
 }
