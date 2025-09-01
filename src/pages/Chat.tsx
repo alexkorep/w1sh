@@ -1,6 +1,11 @@
-import React, { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
-export default function BayLikeChat() {
+interface Message {
+    who: "you" | "them";
+    text: string;
+}
+
+export default function Chat(): JSX.Element {
     const css = `
   /* === Scoped styles inside component === */
   .baylike { 
@@ -58,7 +63,7 @@ export default function BayLikeChat() {
   .baylike .send:disabled{ opacity:.6; cursor:default }
   `;
 
-    const script = [
+    const script: Message[] = [
         { who: "you", text: "Hey! Quick question about the W1‑SH — is its CPU 8088‑compatible? Would it run DOS?" },
         { who: "them", text: "I'm not sure, sorry. It was my dad's." },
         { who: "you", text: "Could you ask him?" },
@@ -68,18 +73,18 @@ export default function BayLikeChat() {
         { who: "you", text: "Alright, I'll take it." }
     ];
 
-    const chatRef = useRef(null);
-    const typingIntervalRef = useRef(null);
-    const timeoutsRef = useRef([]); // keep track to clean up
-    const idxRef = useRef(0);
+    const chatRef = useRef<HTMLDivElement | null>(null);
+    const typingIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+    const timeoutsRef = useRef<Array<ReturnType<typeof setTimeout>>>([]); // keep track to clean up
+    const idxRef = useRef<number>(0);
 
-    const [messages, setMessages] = useState([]); // {who, text}[]
-    const [composerText, setComposerText] = useState("");
-    const [awaitingSend, setAwaitingSend] = useState(false);
-    const [typing, setTyping] = useState(false);
-    const [done, setDone] = useState(false);
+    const [messages, setMessages] = useState<Message[]>([]); // {who, text}[]
+    const [composerText, setComposerText] = useState<string>("");
+    const [awaitingSend, setAwaitingSend] = useState<boolean>(false);
+    const [typing, setTyping] = useState<boolean>(false);
+    const [done, setDone] = useState<boolean>(false);
 
-    const scrollBottom = () => {
+    const scrollBottom = (): void => {
         const el = chatRef.current; if (!el) return;
         el.scrollTo({ top: el.scrollHeight, behavior: "smooth" });
     };
@@ -95,10 +100,15 @@ export default function BayLikeChat() {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
-    function schedule(fn, ms) { const id = setTimeout(fn, ms); timeoutsRef.current.push(id); return id; }
+    function schedule(fn: () => void, ms: number): ReturnType<typeof setTimeout> {
+        const id = setTimeout(fn, ms);
+        timeoutsRef.current.push(id);
+        return id;
+    }
 
-    function typeIntoComposer(text) {
-        setComposerText(""); setAwaitingSend(false);
+    function typeIntoComposer(text: string): void {
+        setComposerText("");
+        setAwaitingSend(false);
         if (typingIntervalRef.current) clearInterval(typingIntervalRef.current);
         let i = 0;
         typingIntervalRef.current = setInterval(() => {
@@ -107,22 +117,27 @@ export default function BayLikeChat() {
             for (let b = 0; b < burst && i < text.length; b++, i++) chunk += text[i];
             setComposerText(prev => prev + chunk);
             if (i >= text.length) {
-                clearInterval(typingIntervalRef.current); typingIntervalRef.current = null;
+                clearInterval(typingIntervalRef.current!);
+                typingIntervalRef.current = null;
                 setAwaitingSend(true);
             }
         }, 18 + Math.floor(Math.random() * 12));
     }
 
-    function nextStep() {
+    function nextStep(): void {
         if (idxRef.current >= script.length) {
-            setDone(true); setAwaitingSend(false); setComposerText("");
+            setDone(true);
+            setAwaitingSend(false);
+            setComposerText("");
             return;
         }
         const line = script[idxRef.current];
         if (line.who === "you") {
             typeIntoComposer(line.text);
         } else {
-            const base = 500; const perChar = 28; const ms = Math.min(2500, base + perChar * Math.min(90, line.text.length));
+            const base = 500;
+            const perChar = 28;
+            const ms = Math.min(2500, base + perChar * Math.min(90, line.text.length));
             setTyping(true);
             schedule(() => {
                 setTyping(false);
@@ -133,10 +148,11 @@ export default function BayLikeChat() {
         }
     }
 
-    function onSend() {
+    function onSend(): void {
         if (!awaitingSend || !composerText.trim()) return;
         setMessages(prev => [...prev, { who: "you", text: composerText.trim() }]);
-        setComposerText(""); setAwaitingSend(false);
+        setComposerText("");
+        setAwaitingSend(false);
         idxRef.current += 1;
         schedule(() => nextStep(), 360);
     }
