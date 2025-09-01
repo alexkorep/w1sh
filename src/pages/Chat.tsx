@@ -8,12 +8,13 @@ interface Message {
 export default function Chat(): JSX.Element {
     const css = `
   /* === Scoped styles inside component === */
-  .baylike { 
-    --bg:#0f141a; --panel:#141b22; --panel-2:#0b1117; --accent:#2f81f7; --accent-2:#1e5fd6; 
-    --text:#e6edf3; --muted:#9aa7b4; --you:#1e2a38; --them:#1f2f1f; --border:#22303c; 
+  .baylike {
+    --bg:#0f141a; --panel:#141b22; --panel-2:#0b1117; --accent:#2f81f7; --accent-2:#1e5fd6;
+    --text:#e6edf3; --muted:#9aa7b4; --you:#1e2a38; --them:#1f2f1f; --border:#22303c;
     --shadow:0 10px 30px rgba(0,0,0,.35); --radius:16px;
-    min-height:100dvh; background:linear-gradient(180deg,#0b1117,#0e151c 40%,#0b1117); 
-    color:var(--text); font:16px/1.4 system-ui,-apple-system,Segoe UI,Roboto,Inter,"Helvetica Neue",Arial; 
+    height:100%; background:linear-gradient(180deg,#0b1117,#0e151c 40%,#0b1117);
+    color:var(--text); font:16px/1.4 system-ui,-apple-system,Segoe UI,Roboto,Inter,"Helvetica Neue",Arial;
+    display:flex; flex-direction:column;
   }
   .baylike *, .baylike *::before, .baylike *::after{ box-sizing:border-box }
 
@@ -24,11 +25,10 @@ export default function Chat(): JSX.Element {
   .baylike .brand{ font-weight:800; letter-spacing:.2px }
   .baylike .muted{ color:var(--muted) }
 
-  .baylike .shell{ max-width:900px; margin:0 auto; padding:0 env(safe-area-inset-right) 0 env(safe-area-inset-left); }
+  .baylike .shell{ max-width:900px; margin:0 auto; padding:0 env(safe-area-inset-right) 0 env(safe-area-inset-left); flex:1; display:flex; }
   .baylike .card{ background:var(--panel); border:1px solid var(--border); border-radius:var(--radius); box-shadow:var(--shadow); overflow:hidden; }
 
-  .baylike .chat{ display:flex; flex-direction:column; min-height:calc(100dvh - 60px); }
-  @media (min-width:600px){ .baylike .chat{ min-height:calc(100dvh - 72px); } }
+  .baylike .chat{ display:flex; flex-direction:column; flex:1; }
 
   .baylike .chat-head{ padding:10px 14px; border-bottom:1px solid var(--border); display:flex; justify-content:space-between; align-items:center; background:linear-gradient(180deg,rgba(255,255,255,.02),transparent) }
 
@@ -56,7 +56,7 @@ export default function Chat(): JSX.Element {
 
   .baylike .composer{ position:sticky; bottom:0; padding:10px env(safe-area-inset-right) calc(10px + env(safe-area-inset-bottom)) env(safe-area-inset-left); border-top:1px solid var(--border); display:flex; gap:10px; background:var(--panel) }
   .baylike .input{ flex:1; position:relative }
-  .baylike textarea{ width:100%; background:#0c1218; color:var(--text); border:1px solid var(--border); padding:12px 56px 12px 12px; border-radius:12px; resize:none; height:52px; line-height:1.3; outline:none; font-size:16px; overflow:hidden; -ms-overflow-style:none; scrollbar-width:none }
+  .baylike textarea{ width:100%; background:#0c1218; color:var(--text); border:1px solid var(--border); padding:12px 56px 12px 12px; border-radius:12px; resize:none; min-height:52px; line-height:1.3; outline:none; font-size:16px; overflow:hidden; -ms-overflow-style:none; scrollbar-width:none }
   .baylike textarea::-webkit-scrollbar{ display:none }
   .baylike .send{ min-width:104px; border:none; background:var(--accent); color:#fff; font-weight:800; border-radius:12px; padding:14px 16px; box-shadow:var(--shadow); cursor:pointer; transition:.15s transform, .15s opacity; font-size:16px }
   .baylike .send:active{ transform:translateY(1px) }
@@ -74,6 +74,7 @@ export default function Chat(): JSX.Element {
     ];
 
     const chatRef = useRef<HTMLDivElement | null>(null);
+    const textareaRef = useRef<HTMLTextAreaElement | null>(null);
     const typingIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
     const timeoutsRef = useRef<Array<ReturnType<typeof setTimeout>>>([]); // keep track to clean up
     const idxRef = useRef<number>(0);
@@ -90,6 +91,12 @@ export default function Chat(): JSX.Element {
     };
 
     useEffect(() => { scrollBottom(); }, [messages, typing]);
+    useEffect(() => {
+        const el = textareaRef.current;
+        if (!el) return;
+        el.style.height = '0px';
+        el.style.height = `${el.scrollHeight}px`;
+    }, [composerText]);
 
     useEffect(() => {
         nextStep();
@@ -200,7 +207,7 @@ export default function Chat(): JSX.Element {
 
                     <div className="composer">
                         <div className="input">
-                            <textarea readOnly aria-label="Message composer (auto-typing)" value={composerText} />
+                            <textarea ref={textareaRef} readOnly aria-label="Message composer (auto-typing)" value={composerText} />
                         </div>
                         <button className="send" onClick={onSend} disabled={!awaitingSend}>Send</button>
                     </div>
