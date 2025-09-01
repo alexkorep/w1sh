@@ -34,6 +34,8 @@ export default function useGameState() {
 
   const setPage = (page: Page): void => setState(prev => ({ ...prev, page }))
 
-  return { page: state.page, setPage }
+  const onChatComplete = (): void => setPage('console')
+
+  return { page: state.page, setPage, onChatComplete }
 }
 

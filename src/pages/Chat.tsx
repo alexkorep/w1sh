@@ -5,7 +5,11 @@ interface Message {
     text: string;
 }
 
-export default function Chat(): JSX.Element {
+interface ChatProps {
+    onComplete?: () => void;
+}
+
+export default function Chat({ onComplete }: ChatProps): JSX.Element {
     const css = `
   /* === Scoped styles inside component === */
   .baylike {
@@ -136,6 +140,7 @@ export default function Chat(): JSX.Element {
             setDone(true);
             setAwaitingSend(false);
             setComposerText("");
+            if (onComplete) onComplete();
             return;
         }
         const line = script[idxRef.current];
