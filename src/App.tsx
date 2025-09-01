@@ -6,13 +6,11 @@ import useGameState from './hooks/useGameState'
 function App() {
   const { page } = useGameState()
 
-  switch (page) {
-    case 'console':
-      return <Console />
-    case 'chat':
-    default:
-      return <Chat />
-  }
+  return (
+    <div className="app-container">
+      {page === 'console' ? <Console /> : <Chat />}
+    </div>
+  )
 }
 
 export default App
