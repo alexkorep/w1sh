@@ -21,3 +21,14 @@ A simple React application built with [Vite](https://vitejs.dev/) and TypeScript
    ```bash
    npm run build
    ```
+
+## Deployment
+
+This project is deployed to GitHub Pages. The site is automatically built and published whenever changes are pushed to the `main` branch.
+
+To preview the production build locally:
+
+```bash
+npm run build
+npm run preview
+```
