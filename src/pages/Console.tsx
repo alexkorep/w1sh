@@ -387,7 +387,7 @@ export default function Console(): JSX.Element {
     margin:0; background: #0c0f0c; color:#d9ffe6; font: 14px/1.4 ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
     display:flex; flex-direction:column; gap:8px;
   }
-  .wrap{ display:flex; flex-direction:column; height:100vh; }
+  .wrap{ display:flex; flex-direction:column; width:100%; height:100%; }
 
   /* --- CRT Screen --- */
   .crt{
