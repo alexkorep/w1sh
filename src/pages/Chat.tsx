@@ -25,7 +25,7 @@ export default function Chat(): JSX.Element {
   .baylike .brand{ font-weight:800; letter-spacing:.2px }
   .baylike .muted{ color:var(--muted) }
 
-  .baylike .shell{ max-width:900px; margin:0 auto; padding:0 env(safe-area-inset-right) 0 env(safe-area-inset-left); flex:1; display:flex; }
+  .baylike .shell{ max-width:900px; margin:0 auto; padding:0 env(safe-area-inset-right) 0 env(safe-area-inset-left); flex:1; display:flex; width:100%; }
   .baylike .card{ background:var(--panel); border:1px solid var(--border); border-radius:var(--radius); box-shadow:var(--shadow); overflow:hidden; }
 
   .baylike .chat{ display:flex; flex-direction:column; flex:1; width:100%; }
