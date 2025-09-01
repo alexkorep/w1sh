@@ -1,19 +1,8 @@
-import { useState } from 'react'
 import './App.css'
+import Chat from './pages/Chat'
 
 function App() {
-  const [count, setCount] = useState(0)
-
-  return (
-    <>
-      <h1>Vite + React + TypeScript</h1>
-      <div className="card">
-        <button onClick={() => setCount((c) => c + 1)}>
-          count is {count}
-        </button>
-      </div>
-    </>
-  )
+  return <Chat />
 }
 
 export default App
