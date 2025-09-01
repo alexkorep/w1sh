@@ -1,8 +1,11 @@
 // @ts-nocheck
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 
 export default function Console(): JSX.Element {
+  const booted = useRef(false);
   useEffect(() => {
+    if (booted.current) return;
+    booted.current = true;
 
 (function(){
   // ----- Utility -----
@@ -352,11 +355,12 @@ export default function Console(): JSX.Element {
       setTimeout(()=>{ println('HIMEM is testing extended memory... done.'); }, 400);
       setTimeout(()=>{ println('\nMicrosoft(R) MS-DOS(R) Version 6.22'); }, 900);
       setTimeout(()=>{ println('Copyright (C) Microsoft Corp 1981-1994.'); }, 1200);
-      setTimeout(()=>{ if(fromReboot) beep(660,90); drawPrompt(); setTimeout(()=>{ // run quick, quiet tests once
+      setTimeout(()=>{
+        if(fromReboot) beep(660,90);
         const pass = runSelfTests(false);
         println(pass? 'Self-tests: PASS' : 'Self-tests: FAIL (type TESTS for details)');
         drawPrompt();
-      }, 300); }, 1500);
+      }, 1500);
     }, 700);
   }
 
