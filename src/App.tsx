@@ -1,10 +1,14 @@
 import './App.css'
 import Chat from './pages/Chat'
+import Console from './pages/Console'
+import useGameState from './hooks/useGameState'
 
 function App() {
+  const { page } = useGameState()
+
   return (
     <div className="app-container">
-      <Chat />
+      {page === 'console' ? <Console /> : <Chat />}
     </div>
   )
 }
