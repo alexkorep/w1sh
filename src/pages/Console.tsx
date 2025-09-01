@@ -1,137 +1,9 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
-<title>Pocket DOS Simulator</title>
-<style>
-  :root{
-    --screen-bg:#001400;
-    --phosphor:#00ff80;
-    --phosphor-dim:#00b060;
-    --bezel:#1a1a1a;
-    --bezel-edge:#0a0a0a;
-    --accent:#4dd17a;
-    --btn:#151a16;
-    --btn-edge:#0d100e;
-    --btn-text:#d9ffe6;
-  }
-  html, body { height:100%; }
-  body{
-    margin:0; background: #0c0f0c; color:#d9ffe6; font: 14px/1.4 ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
-    display:flex; flex-direction:column; gap:8px;
-  }
-  .wrap{ display:flex; flex-direction:column; height:100vh; }
+// @ts-nocheck
+import { useEffect } from 'react';
 
-  /* --- CRT Screen --- */
-  .crt{
-    position:relative; flex: 1 1 50%; min-height:45vh; max-height:60vh; margin:8px; border-radius:20px; overflow:hidden;
-    border: 8px solid var(--bezel); box-shadow:
-      0 0 0 2px var(--bezel-edge) inset,
-      0 40px 80px rgba(0,0,0,.7),
-      0 12px 24px rgba(0,0,0,.8) inset;
-    background: radial-gradient(120% 80% at 50% 50%, #001c00 0%, #000b00 75%);
-  }
-  .crt .inner{
-    position:absolute; inset:14px; border-radius:12px; background: var(--screen-bg);
-    box-shadow: 0 0 0 2px rgba(0,0,0,.65) inset,
-                0 0 80px rgba(0,255,130,.06) inset,
-                0 0 220px rgba(0,200,100,.05) inset;
-    overflow:auto; scroll-behavior: smooth;
-    -webkit-overflow-scrolling: touch;
-    filter: saturate(90%) contrast(110%) brightness(95%);
-  }
-  pre#screen{ margin:0; padding:16px 18px 40px; color:var(--phosphor); font-size: clamp(12px, 2.6vmin, 18px); text-shadow: 0 0 6px rgba(0,255,130,.35), 0 0 18px rgba(0,255,100,.12);
-    white-space:pre-wrap; word-wrap:break-word; }
+export default function Console(): JSX.Element {
+  useEffect(() => {
 
-  /* Scanlines + glow */
-  .glass{ pointer-events:none; position:absolute; inset:0; border-radius:12px;
-    background:
-      linear-gradient(180deg, rgba(0,0,0,.15), rgba(0,0,0,.35)),
-      radial-gradient(60% 90% at 50% 10%, rgba(255,255,255,.06), rgba(0,0,0,0) 60%),
-      repeating-linear-gradient( to bottom, rgba(0,0,0,.05) 0, rgba(0,0,0,.05) 1px, rgba(0,0,0,0) 2px, rgba(0,0,0,0) 4px );
-    mix-blend-mode: screen; animation: flicker 3.6s infinite;
-  }
-  @keyframes flicker{
-    0%, 19%, 21%, 23%, 100%{ opacity: .9; }
-    20%, 22% { opacity:.72; }
-  }
-  .vignette{ position:absolute; inset:0; pointer-events:none; border-radius:12px;
-    box-shadow: inset 0 0 120px rgba(0,0,0,.6), inset 0 0 300px rgba(0,0,0,.75);
-  }
-  .status{
-    position:absolute; right:18px; top:10px; font-size: 12px; color:#a9ffcd; opacity:.75;
-    text-shadow:0 0 10px rgba(0,255,120,.25);
-  }
-  .blink{ animation: blink 1.05s step-start infinite; }
-  @keyframes blink{ 50%{ opacity:0; } }
-
-  /* --- Keyboard / Command Pad --- */
-  .kb{
-    flex: 1 1 50%; min-height:38vh; margin:0 8px 10px; display:flex; flex-direction:column; gap:8px;
-  }
-  .bar{ display:flex; flex-wrap:wrap; gap:8px; justify-content:center; }
-  .chip{
-    background: linear-gradient(180deg, #103818, #0e2a15); color:var(--btn-text);
-    border:1px solid #0b2a14; border-bottom-color:#071c0d; border-radius:14px; padding:8px 12px; font-weight:600; letter-spacing:.6px;
-    box-shadow: 0 3px 0 #061a0c, 0 0 0 2px #031006 inset; text-transform:uppercase; user-select:none;
-    touch-action: manipulation; -webkit-tap-highlight-color: transparent; cursor:pointer;
-  }
-  .chip:active{ transform: translateY(1px); box-shadow: 0 2px 0 #061a0c, 0 0 0 2px #031006 inset; }
-
-  .rows{ display:grid; grid-template-rows: repeat(5, 1fr); gap:8px; }
-  .row{ display:grid; grid-auto-flow: column; grid-auto-columns: 1fr; gap:6px; }
-  .key{
-    background: linear-gradient(180deg, #121612, #0a0e0a); color:#d8ffe8; border:1px solid #0e120f;
-    border-bottom-color:#050806; border-radius:10px; padding:14px 10px; font-size: clamp(14px, 2.6vmin, 18px);
-    box-shadow: 0 3.5px 0 #070b08, 0 0 0 2px #050805 inset; text-align:center; user-select:none;
-    touch-action: manipulation; -webkit-tap-highlight-color: transparent; cursor:pointer;
-  }
-  .key:active{ transform: translateY(1px); box-shadow: 0 2px 0 #070b08, 0 0 0 2px #050805 inset; }
-  .key.wide{ grid-column: span 3; }
-  .key.xwide{ grid-column: span 6; }
-  .key.tiny{ font-size: clamp(12px, 2.2vmin, 16px); }
-  .legend{ opacity:.75; font-size: .8em; display:block; line-height:1; margin-top:2px; }
-
-  /* Make sure everything fits on small phones */
-  @media (max-width: 420px){
-    .crt .inner{ inset:10px; }
-    .chip{ padding:6px 10px; border-radius:12px; }
-    .key{ padding:12px 8px; }
-  }
-</style>
-</head>
-<body>
-  <div class="wrap">
-    <div class="crt" id="crt">
-      <div class="inner"><pre id="screen"></pre></div>
-      <div class="glass"></div>
-      <div class="vignette"></div>
-      <div class="status" id="status">POWER ◉</div>
-    </div>
-
-    <div class="kb" id="kb">
-      <div class="bar" id="cmdbar">
-        <button class="chip" data-cmd="DIR">DIR</button>
-        <button class="chip" data-cmd="CLS">CLS</button>
-        <button class="chip" data-cmd="CD ..">CD ..</button>
-        <button class="chip" data-cmd="TYPE README.TXT">TYPE README.TXT</button>
-        <button class="chip" data-cmd="HELP">HELP</button>
-        <button class="chip" data-cmd="RUN DEMO">RUN DEMO</button>
-        <button class="chip" data-cmd="BEEP">BEEP</button>
-        <button class="chip" data-cmd="REBOOT">REBOOT</button>
-      </div>
-      <div class="rows">
-        <div class="row" id="r0"></div>
-        <div class="row" id="r1"></div>
-        <div class="row" id="r2"></div>
-        <div class="row" id="r3"></div>
-        <div class="row" id="r4"></div>
-      </div>
-    </div>
-  </div>
-
-<script>
 (function(){
   // ----- Utility -----
   const screen = document.getElementById('screen');
@@ -494,6 +366,139 @@
   // Kick off
   boot(false);
 })();
-</script>
-</body>
-</html>
+
+  }, []);
+
+  const css = `
+
+  :root{
+    --screen-bg:#001400;
+    --phosphor:#00ff80;
+    --phosphor-dim:#00b060;
+    --bezel:#1a1a1a;
+    --bezel-edge:#0a0a0a;
+    --accent:#4dd17a;
+    --btn:#151a16;
+    --btn-edge:#0d100e;
+    --btn-text:#d9ffe6;
+  }
+  html, body { height:100%; }
+  body{
+    margin:0; background: #0c0f0c; color:#d9ffe6; font: 14px/1.4 ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+    display:flex; flex-direction:column; gap:8px;
+  }
+  .wrap{ display:flex; flex-direction:column; height:100vh; }
+
+  /* --- CRT Screen --- */
+  .crt{
+    position:relative; flex: 1 1 50%; min-height:45vh; max-height:60vh; margin:8px; border-radius:20px; overflow:hidden;
+    border: 8px solid var(--bezel); box-shadow:
+      0 0 0 2px var(--bezel-edge) inset,
+      0 40px 80px rgba(0,0,0,.7),
+      0 12px 24px rgba(0,0,0,.8) inset;
+    background: radial-gradient(120% 80% at 50% 50%, #001c00 0%, #000b00 75%);
+  }
+  .crt .inner{
+    position:absolute; inset:14px; border-radius:12px; background: var(--screen-bg);
+    box-shadow: 0 0 0 2px rgba(0,0,0,.65) inset,
+                0 0 80px rgba(0,255,130,.06) inset,
+                0 0 220px rgba(0,200,100,.05) inset;
+    overflow:auto; scroll-behavior: smooth;
+    -webkit-overflow-scrolling: touch;
+    filter: saturate(90%) contrast(110%) brightness(95%);
+  }
+  pre#screen{ margin:0; padding:16px 18px 40px; color:var(--phosphor); font-size: clamp(12px, 2.6vmin, 18px); text-shadow: 0 0 6px rgba(0,255,130,.35), 0 0 18px rgba(0,255,100,.12);
+    white-space:pre-wrap; word-wrap:break-word; }
+
+  /* Scanlines + glow */
+  .glass{ pointer-events:none; position:absolute; inset:0; border-radius:12px;
+    background:
+      linear-gradient(180deg, rgba(0,0,0,.15), rgba(0,0,0,.35)),
+      radial-gradient(60% 90% at 50% 10%, rgba(255,255,255,.06), rgba(0,0,0,0) 60%),
+      repeating-linear-gradient( to bottom, rgba(0,0,0,.05) 0, rgba(0,0,0,.05) 1px, rgba(0,0,0,0) 2px, rgba(0,0,0,0) 4px );
+    mix-blend-mode: screen; animation: flicker 3.6s infinite;
+  }
+  @keyframes flicker{
+    0%, 19%, 21%, 23%, 100%{ opacity: .9; }
+    20%, 22% { opacity:.72; }
+  }
+  .vignette{ position:absolute; inset:0; pointer-events:none; border-radius:12px;
+    box-shadow: inset 0 0 120px rgba(0,0,0,.6), inset 0 0 300px rgba(0,0,0,.75);
+  }
+  .status{
+    position:absolute; right:18px; top:10px; font-size: 12px; color:#a9ffcd; opacity:.75;
+    text-shadow:0 0 10px rgba(0,255,120,.25);
+  }
+  .blink{ animation: blink 1.05s step-start infinite; }
+  @keyframes blink{ 50%{ opacity:0; } }
+
+  /* --- Keyboard / Command Pad --- */
+  .kb{
+    flex: 1 1 50%; min-height:38vh; margin:0 8px 10px; display:flex; flex-direction:column; gap:8px;
+  }
+  .bar{ display:flex; flex-wrap:wrap; gap:8px; justify-content:center; }
+  .chip{
+    background: linear-gradient(180deg, #103818, #0e2a15); color:var(--btn-text);
+    border:1px solid #0b2a14; border-bottom-color:#071c0d; border-radius:14px; padding:8px 12px; font-weight:600; letter-spacing:.6px;
+    box-shadow: 0 3px 0 #061a0c, 0 0 0 2px #031006 inset; text-transform:uppercase; user-select:none;
+    touch-action: manipulation; -webkit-tap-highlight-color: transparent; cursor:pointer;
+  }
+  .chip:active{ transform: translateY(1px); box-shadow: 0 2px 0 #061a0c, 0 0 0 2px #031006 inset; }
+
+  .rows{ display:grid; grid-template-rows: repeat(5, 1fr); gap:8px; }
+  .row{ display:grid; grid-auto-flow: column; grid-auto-columns: 1fr; gap:6px; }
+  .key{
+    background: linear-gradient(180deg, #121612, #0a0e0a); color:#d8ffe8; border:1px solid #0e120f;
+    border-bottom-color:#050806; border-radius:10px; padding:14px 10px; font-size: clamp(14px, 2.6vmin, 18px);
+    box-shadow: 0 3.5px 0 #070b08, 0 0 0 2px #050805 inset; text-align:center; user-select:none;
+    touch-action: manipulation; -webkit-tap-highlight-color: transparent; cursor:pointer;
+  }
+  .key:active{ transform: translateY(1px); box-shadow: 0 2px 0 #070b08, 0 0 0 2px #050805 inset; }
+  .key.wide{ grid-column: span 3; }
+  .key.xwide{ grid-column: span 6; }
+  .key.tiny{ font-size: clamp(12px, 2.2vmin, 16px); }
+  .legend{ opacity:.75; font-size: .8em; display:block; line-height:1; margin-top:2px; }
+
+  /* Make sure everything fits on small phones */
+  @media (max-width: 420px){
+    .crt .inner{ inset:10px; }
+    .chip{ padding:6px 10px; border-radius:12px; }
+    .key{ padding:12px 8px; }
+  }
+
+  `;
+
+  return (
+    <>
+      <style>{css}</style>
+      <div className="wrap">
+          <div className="crt" id="crt">
+            <div className="inner"><pre id="screen"></pre></div>
+            <div className="glass"></div>
+            <div className="vignette"></div>
+            <div className="status" id="status">POWER ◉</div>
+          </div>
+      
+          <div className="kb" id="kb">
+            <div className="bar" id="cmdbar">
+              <button className="chip" data-cmd="DIR">DIR</button>
+              <button className="chip" data-cmd="CLS">CLS</button>
+              <button className="chip" data-cmd="CD ..">CD ..</button>
+              <button className="chip" data-cmd="TYPE README.TXT">TYPE README.TXT</button>
+              <button className="chip" data-cmd="HELP">HELP</button>
+              <button className="chip" data-cmd="RUN DEMO">RUN DEMO</button>
+              <button className="chip" data-cmd="BEEP">BEEP</button>
+              <button className="chip" data-cmd="REBOOT">REBOOT</button>
+            </div>
+            <div className="rows">
+              <div className="row" id="r0"></div>
+              <div className="row" id="r1"></div>
+              <div className="row" id="r2"></div>
+              <div className="row" id="r3"></div>
+              <div className="row" id="r4"></div>
+            </div>
+          </div>
+        </div>
+    </>
+  );
+}
