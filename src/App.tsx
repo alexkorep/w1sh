@@ -2,10 +2,12 @@ import "./App.css";
 import AdPage from "./pages/AdPage";
 import Chat from "./pages/Chat";
 import Console from "./pages/Console";
+
 import useGameState from "./hooks/useGameState";
 
+
 function App() {
-  const { page, setPage, onChatComplete } = useGameState();
+  const { page, setPage, onChatComplete, newGame } = useGameState();
 
   return (
     <div className="app-container">
@@ -14,7 +16,7 @@ function App() {
       ) : page === "chat" ? (
         <Chat onComplete={onChatComplete} />
       ) : (
-        <Console />
+        <Console newGame={newGame} />
       )}
     </div>
   );

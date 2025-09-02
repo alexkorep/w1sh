@@ -36,5 +36,7 @@ export default function useGameState() {
 
   const onChatComplete = (): void => setPage("console");
 
-  return { page: state.page, setPage, onChatComplete };
+  const newGame = (): void => setState({ page: "ad" });
+
+  return { page: state.page, setPage, onChatComplete, newGame };
 }
