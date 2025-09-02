@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 
-export type Page = "ad" | "chat" | "console";
+export type Page = "ad" | "chat" | "arrival" | "console";
 
 interface GameState {
   page: Page;
@@ -34,9 +34,11 @@ export default function useGameState() {
 
   const setPage = (page: Page): void => setState((prev) => ({ ...prev, page }));
 
-  const onChatComplete = (): void => setPage("console");
+  const onChatComplete = (): void => setPage("arrival");
+
+  const onArrivalComplete = (): void => setPage("console");
 
   const newGame = (): void => setState({ page: "ad" });
 
-  return { page: state.page, setPage, onChatComplete, newGame };
+  return { page: state.page, setPage, onChatComplete, onArrivalComplete, newGame };
 }
