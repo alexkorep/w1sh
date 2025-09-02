@@ -1,7 +1,11 @@
 // @ts-nocheck
 import { useEffect, useRef } from "react";
 
-export default function Console(): JSX.Element {
+interface ConsoleProps {
+  newGame: () => void;
+}
+
+export default function Console({ newGame }: ConsoleProps): JSX.Element {
   const booted = useRef(false);
   useEffect(() => {
     if (booted.current) return;
@@ -518,7 +522,11 @@ export default function Console(): JSX.Element {
         const b = e.target.closest("[data-cmd]");
         if (!b) return;
         const c = b.dataset.cmd;
-        typeCommand(c);
+        if (c === "REBOOT") {
+          newGame();
+        } else {
+          typeCommand(c);
+        }
       });
       function typeCommand(c) {
         // write command to buffer and submit
