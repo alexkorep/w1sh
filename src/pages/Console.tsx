@@ -181,7 +181,7 @@ export default function Console({ newGame }: ConsoleProps): JSX.Element {
         // Remove previous buffer characters (after last '> ')
         const idx = noCursor.lastIndexOf("> ");
         const base = noCursor.slice(0, idx + 2);
-        screen.textContent = base + " " + text;
+        screen.textContent = base + text;
         lineBuffer = text;
         renderCursor();
       }
