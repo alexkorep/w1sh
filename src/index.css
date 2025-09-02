@@ -1,8 +1,9 @@
 body {
   margin: 0;
-  font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
+  font-family: monospace;
   line-height: 1.5;
   background: #000;
+  overflow: hidden;
 }
 
 #root {
@@ -12,4 +13,5 @@ body {
   padding: 0;
   width: 100vw;
   height: 100vh;
+  overflow: hidden;
 }
