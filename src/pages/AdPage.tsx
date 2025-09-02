@@ -17,7 +17,7 @@ export default function AdPage({ onMessageSeller }: { onMessageSeller: () => voi
       --radius:16px;
     }
     *{box-sizing:border-box}
-    html,body{margin:0;background:var(--bg);color:var(--text);font:16px/1.45 monospace}
+    html,body{margin:0;background:var(--bg);color:var(--text);font:16px/1.45 system-ui, -apple-system, Segoe UI, Roboto, Inter,Arial, sans-serif}
     a{color:var(--accent);text-decoration:none}
     .wrap{max-width:960px;margin-inline:auto;padding:12px 12px 72px}
 
