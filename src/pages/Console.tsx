@@ -735,8 +735,7 @@ export default function Console({ newGame }: ConsoleProps): JSX.Element {
     box-shadow: 0 0 0 2px rgba(0,0,0,.65) inset,
                 0 0 80px rgba(0,255,130,.06) inset,
                 0 0 220px rgba(0,200,100,.05) inset;
-    overflow:auto; scroll-behavior: smooth;
-    -webkit-overflow-scrolling: touch;
+    overflow:hidden;
     filter: saturate(90%) contrast(110%) brightness(95%);
   }
   pre#screen{ margin:0; padding:16px 18px 40px; color:var(--phosphor); font-size: clamp(12px, 2.6vmin, 18px); text-shadow: 0 0 6px rgba(0,255,130,.35), 0 0 18px rgba(0,255,100,.12);

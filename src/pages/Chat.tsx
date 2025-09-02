@@ -17,7 +17,7 @@ export default function Chat({ onComplete }: ChatProps): JSX.Element {
     --text:#e6edf3; --muted:#9aa7b4; --you:#1e2a38; --them:#1f2f1f; --border:#22303c;
     --shadow:0 10px 30px rgba(0,0,0,.35); --radius:16px;
     height:100%; width:100%; background:linear-gradient(180deg,#0b1117,#0e151c 40%,#0b1117);
-    color:var(--text); font:16px/1.4 system-ui,-apple-system,Segoe UI,Roboto,Inter,"Helvetica Neue",Arial;
+    color:var(--text); font:16px/1.4 monospace;
     display:flex; flex-direction:column;
   }
   .baylike *, .baylike *::before, .baylike *::after{ box-sizing:border-box }
@@ -36,7 +36,7 @@ export default function Chat({ onComplete }: ChatProps): JSX.Element {
 
   .baylike .chat-head{ padding:10px 14px; border-bottom:1px solid var(--border); display:flex; justify-content:space-between; align-items:center; background:linear-gradient(180deg,rgba(255,255,255,.02),transparent) }
 
-  .baylike .chat-body{ flex:1; overflow:auto; padding:14px; display:flex; flex-direction:column; gap:10px; background:radial-gradient(1200px 400px at 20% -20%, rgba(47,129,247,.07), transparent 60%) }
+  .baylike .chat-body{ flex:1; overflow:hidden; padding:14px; display:flex; flex-direction:column; gap:10px; background:radial-gradient(1200px 400px at 20% -20%, rgba(47,129,247,.07), transparent 60%) }
   /* Hide scrollbars in chat and composer textarea */
   .baylike .chat-body{ -ms-overflow-style:none; scrollbar-width:none }
   .baylike .chat-body::-webkit-scrollbar{ display:none }
