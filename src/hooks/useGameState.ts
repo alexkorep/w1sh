@@ -1,41 +1,40 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState } from "react";
 
-export type Page = 'chat' | 'console'
+export type Page = "chat" | "console";
 
 interface GameState {
-  page: Page
+  page: Page;
 }
 
-const STORAGE_KEY = 'gameState'
+const STORAGE_KEY = "gameState";
 
 function loadState(): GameState {
   try {
-    const stored = localStorage.getItem(STORAGE_KEY)
+    const stored = localStorage.getItem(STORAGE_KEY);
     if (stored) {
-      const parsed = JSON.parse(stored) as GameState
-      if (parsed.page) return parsed
+      const parsed = JSON.parse(stored) as GameState;
+      if (parsed.page) return parsed;
     }
   } catch {
     // ignore parsing errors and fall back to default
   }
-  return { page: 'chat' }
+  return { page: "chat" };
 }
 
 export default function useGameState() {
-  const [state, setState] = useState<GameState>(() => loadState())
+  const [state, setState] = useState<GameState>(() => loadState());
 
   useEffect(() => {
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(state))
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
     } catch {
       // ignore write errors
     }
-  }, [state])
+  }, [state]);
 
-  const setPage = (page: Page): void => setState(prev => ({ ...prev, page }))
+  const setPage = (page: Page): void => setState((prev) => ({ ...prev, page }));
 
-  const onChatComplete = (): void => setPage('console')
+  const onChatComplete = (): void => setPage("console");
 
-  return { page: state.page, setPage, onChatComplete }
+  return { page: state.page, setPage, onChatComplete };
 }
-

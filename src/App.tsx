@@ -1,16 +1,16 @@
-import './App.css'
-import Chat from './pages/Chat'
-import Console from './pages/Console'
-import useGameState from './hooks/useGameState'
+import "./App.css";
+import Chat from "./pages/Chat";
+import Console from "./pages/Console";
+import useGameState from "./hooks/useGameState";
 
 function App() {
-  const { page, onChatComplete } = useGameState()
+  const { page, onChatComplete } = useGameState();
 
   return (
     <div className="app-container">
-      {page === 'console' ? <Console /> : <Chat onComplete={onChatComplete} />}
+      {page === "console" ? <Console /> : <Chat onComplete={onChatComplete} />}
     </div>
-  )
+  );
 }
 
-export default App
+export default App;

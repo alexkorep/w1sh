@@ -1,5 +1,5 @@
 // @ts-nocheck
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef } from "react";
 
 export default function Console(): JSX.Element {
   const booted = useRef(false);
@@ -7,370 +7,690 @@ export default function Console(): JSX.Element {
     if (booted.current) return;
     booted.current = true;
 
-(function(){
-  // ----- Utility -----
-  const screen = document.getElementById('screen');
-  const crtInner = document.querySelector('.crt .inner');
-  const statusEl = document.getElementById('status');
-  const kb = document.getElementById('kb');
+    (function () {
+      // ----- Utility -----
+      const screen = document.getElementById("screen");
+      const crtInner = document.querySelector(".crt .inner");
+      const statusEl = document.getElementById("status");
+      const kb = document.getElementById("kb");
 
-  let __MUTE = false; // used by self-tests to silence output
+      let __MUTE = false; // used by self-tests to silence output
 
-  function print(txt=""){ if(__MUTE) return; screen.textContent += txt; scrollToEnd(); }
-  function println(txt=""){ if(__MUTE) return; screen.textContent += txt + "\n"; scrollToEnd(); }
-  function scrollToEnd(){ requestAnimationFrame(()=>{ crtInner.scrollTop = crtInner.scrollHeight + 9999; }); }
-
-  // Simple PC speaker beep (requires a user gesture on mobile first)
-  let audioCtx = null;
-  function initAudio(){ if(!audioCtx){ try{ audioCtx = new (window.AudioContext||window.webkitAudioContext)(); }catch(e){} } }
-  function beep(freq=880, ms=120){ if(!audioCtx) return; const o=audioCtx.createOscillator(); const g=audioCtx.createGain(); o.type='square'; o.frequency.value=freq; g.gain.value=0.06; o.connect(g); g.connect(audioCtx.destination); o.start(); setTimeout(()=>{ o.stop(); }, ms); }
-
-  // ----- Fake filesystem -----
-  const now = new Date();
-  const DATE = (d=>{
-    const pad=n=>String(n).padStart(2,'0');
-    const m=pad(d.getMonth()+1), Day=pad(d.getDate()), Y=d.getFullYear().toString().slice(-2);
-    const h=pad(d.getHours()), min=pad(d.getMinutes());
-    return {date:`${m}-${Day}-${Y}`, time:`${h}:${min}`};
-  })(now);
-
-  function file(content){ return {type:'file', content}; }
-  function dir(children={}){ return {type:'dir', children}; }
-  function app(name, run){ return {type:'app', name, run}; }
-
-  const FS = {
-    'C:': dir({
-      'AUTOEXEC.BAT': file('@ECHO OFF\r\nPROMPT $P$G\r\nPATH C:\\DOS;C:\\UTILS\r\n'),
-      'CONFIG.SYS': file('DEVICE=HIMEM.SYS\r\nDOS=HIGH,UMB\r\nFILES=30\r\nBUFFERS=20\r\n'),
-      'README.TXT': file('Welcome to Pocket DOS (sim).\r\n\r\nTry commands: DIR, CLS, TYPE README.TXT, HELP, VER, TIME, DATE, CD NOTES, TYPE TODO.TXT, RUN DEMO, BEEP, TESTS.\r\n'),
-      'NOTES': dir({ 'TODO.TXT': file('- Finish the space trader prototype\r\n- Record DOS simulator demo\r\n- Buy floppies (just kidding)\r\n') }),
-      'GAMES': dir({ 'DEMO.EXE': app('DEMO', 'demo') }),
-      'DOS': dir({ 'COMMAND.COM': file('This file does nothing here, but it looks legit.\r\n') })
-    })
-  };
-
-  let cwd = ['C:'];
-
-  function pathString(){ return cwd.join('\\') + '>'; }
-  function nodeAtPath(pathParts){
-    let node = FS; for(const p of pathParts){ if(!node[p]) return null; node = node[p]; if(node.type==='dir') node=node.children; }
-    return node; // for files/apps you get the node, for dirs you get its map
-  }
-  function resolve(path){
-    // returns [type, node] or [null,null]
-    const parts = path.replace(/\\/g,'/').split('/').filter(Boolean);
-    let ref = (path.match(/^[A-Za-z]:/)? [path.slice(0,2)] : [...cwd]);
-    for(const part of parts){
-      if(part==='.' ) continue;
-      if(part==='..'){ if(ref.length>1) ref.pop(); continue; }
-      const here = nodeAtPath(ref);
-      if(!here || !here[part]) return [null, null];
-      const n = here[part];
-      if(n.type==='dir') ref.push(part);
-      else return [n.type, n];
-    }
-    return ['dir', nodeAtPath(ref)];
-  }
-
-  // ----- Command interpreter -----
-  let lineBuffer = '';
-  let history = []; let histIdx = -1;
-  let cursorVisible = true; let promptActive = false; let cursorTimer;
-
-  function drawPrompt(){
-    promptActive = true; lineBuffer='';
-    print(`\n${pathString()} `);
-    startCursor();
-  }
-  function startCursor(){
-    stopCursor(); cursorTimer = setInterval(()=>{ if(!promptActive) return; cursorVisible = !cursorVisible; renderCursor(); }, 530);
-    renderCursor();
-  }
-  function stopCursor(){ clearInterval(cursorTimer); }
-  function renderCursor(){
-    // rewrite current line: remove any existing cursor char
-    const txt = screen.textContent.replace(/▌$/,'');
-    screen.textContent = txt;
-    if(promptActive){ print(cursorVisible ? '▌' : ' '); }
-  }
-
-  function setLine(text){
-    // replace buffer visually
-    const noCursor = screen.textContent.replace(/▌$/,'');
-    // Remove previous buffer characters (after last '> ')
-    const idx = noCursor.lastIndexOf('> ');
-    const base = noCursor.slice(0, idx+2);
-    screen.textContent = base + ' ' + text;
-    lineBuffer = text;
-    renderCursor();
-  }
-
-  function handleChar(ch){ if(!promptActive) return; setLine(lineBuffer + ch); }
-  function backspace(){ if(!promptActive) return; setLine(lineBuffer.slice(0,-1)); }
-  function submit(){ if(!promptActive) return; promptActive=false; stopCursor();
-    // finalize line
-    const noCursor = screen.textContent.replace(/▌$/,'');
-    screen.textContent = noCursor + "\n";
-    const cmd = lineBuffer.trim(); if(cmd) history.unshift(cmd); histIdx=-1;
-    exec(cmd);
-  }
-
-  function upHistory(){ if(history.length===0) return; histIdx = Math.min(histIdx+1, history.length-1); setLine(history[histIdx]); }
-  function downHistory(){ if(history.length===0) return; histIdx = Math.max(histIdx-1, -1); setLine(histIdx===-1? '' : history[histIdx]); }
-
-  function exec(raw){
-    const input = raw; const parts = raw.split(/\s+/).filter(Boolean);
-    const cmd = (parts.shift()||'').toUpperCase();
-    if(!cmd){ drawPrompt(); return; }
-
-    const joinRest = ()=> input.slice(cmd.length).trim();
-
-    switch(cmd){
-      case 'CLS': screen.textContent=''; break;
-      case 'DIR': dirCmd(); break;
-      case 'CD': cdCmd(parts[0]); break;
-      case 'TYPE': typeCmd(joinRest()); break;
-      case 'ECHO': println(joinRest()); break;
-      case 'HELP': helpCmd(); break;
-      case 'VER': println('MS-DOS Version 6.22 (sim)'); break;
-      case 'TIME': println(`Current time: ${DATE.time}`); break;
-      case 'DATE': println(`Current date: ${DATE.date}`); break;
-      case 'MEM': println('655,360 bytes total conventional memory\n615,000 bytes free (simulated)'); break;
-      case 'RUN': runCmd(parts.join(' ')); break;
-      case 'BEEP': initAudio(); beep(880,120); println('Beep!'); break;
-      case 'REBOOT': boot(true); return; // boot draws its own prompt
-      case 'TESTS': runSelfTests(true); break;
-      default:
-        // app by name
-        if(tryRunByName(cmd)){} else {
-          println(`'${cmd}' is not recognized as an internal or external command, operable program or batch file.`);
-        }
-    }
-    drawPrompt();
-  }
-
-  function dirCmd(){
-    const here = nodeAtPath(cwd);
-    const keys = Object.keys(here);
-    println(`\n Volume in drive C is POCKETDOS`);
-    println(` Directory of ${cwd.join('\\')}\\`);
-    println('');
-    for(const k of keys){
-      const n = here[k]; const isDir = n.type==='dir';
-      println(` ${DATE.date}  ${DATE.time}${isDir? '  <DIR> ' : '         '} ${k}`);
-    }
-  }
-
-  function cdCmd(arg){
-    if(!arg){ println(cwd.join('\\')); return; }
-    if(arg==='..'){ if(cwd.length>1) cwd.pop(); else println('Already at root.'); return; }
-    const here = nodeAtPath(cwd);
-    if(here && here[arg] && here[arg].type==='dir'){ cwd.push(arg); }
-    else { println('The system cannot find the path specified.'); }
-  }
-
-  function typeCmd(path){
-    if(!path){ println('File name required.'); return; }
-    const [t, n] = resolve(path);
-    if(!t){ println('File not found.'); return; }
-    if(t==='file'){ println('\n' + n.content.replaceAll('\r\n','\n')); }
-    else { println('Cannot TYPE this item.'); }
-  }
-
-  function runCmd(name){ if(!name){ println('Specify program name.'); return; } tryRunByName(name.toUpperCase()); }
-  function tryRunByName(name){
-    // with or without .EXE
-    const prog = name.replace(/\.EXE$/i,'');
-    const here = nodeAtPath(cwd);
-    const keyExe = prog + '.EXE';
-    if(here && here[keyExe] && here[keyExe].type==='app'){ return runApp(here[keyExe].run); }
-    // also check in C:\\GAMES
-    const games = nodeAtPath(['C:','GAMES']);
-    if(games && games[keyExe] && games[keyExe].type==='app'){ return runApp(games[keyExe].run); }
-    return false;
-  }
-  function runApp(id){
-    switch(id){
-      case 'demo': return demoApp();
-      default: println('This program cannot be run in this DOS box.'); return true;
-    }
-  }
-  function demoApp(){
-    println('Launching DEMO.EXE...');
-    // Tiny ASCII starfield demo for ~3 seconds
-    const W=38, H=10; let t=0; let frames=0; const maxFrames=90;
-    const anchorLen = screen.textContent.length;
-    const timer = setInterval(()=>{
-      frames++; t+=1; const rows = [];
-      for(let y=0;y<H;y++){
-        let row='';
-        for(let x=0;x<W;x++){
-          const v = (Math.sin((x+t*0.6)*0.5)+Math.cos((y*1.3+t*0.37)));
-          row += (v>1.1? '*': (v>0.9? '.':' '));
-        }
-        rows.push(row);
+      function print(txt = "") {
+        if (__MUTE) return;
+        screen.textContent += txt;
+        scrollToEnd();
       }
-      // erase to anchor
-      screen.textContent = screen.textContent.slice(0, anchorLen);
-      println(rows.join('\n'));
-      if(frames>=maxFrames){ clearInterval(timer); println('DEMO finished.'); drawPrompt(); }
-      scrollToEnd();
-    }, 33);
-    return true;
-  }
+      function println(txt = "") {
+        if (__MUTE) return;
+        screen.textContent += txt + "\n";
+        scrollToEnd();
+      }
+      function scrollToEnd() {
+        requestAnimationFrame(() => {
+          crtInner.scrollTop = crtInner.scrollHeight + 9999;
+        });
+      }
 
-  // ----- HELP -----
-  function helpCmd(){
-    println('\nPOCKET DOS (sim) Help');
-    println('----------------------');
-    println(' DIR                list files and folders');
-    println(' CD <DIR>          change directory  (use "CD .." to go up)');
-    println(' TYPE <FILE>       print a text file');
-    println(' ECHO <TEXT>       output text');
-    println(' CLS               clear screen');
-    println(' VER | DATE | TIME | MEM');
-    println(' RUN <NAME>        run a program (e.g., RUN DEMO)');
-    println(' BEEP              beep the PC speaker');
-    println(' TESTS             run built-in self tests');
-    println(' REBOOT            reboot the simulated PC');
-    println('\nTips: tap the chips above the keyboard for quick commands.');
-  }
+      // Simple PC speaker beep (requires a user gesture on mobile first)
+      let audioCtx = null;
+      function initAudio() {
+        if (!audioCtx) {
+          try {
+            audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+          } catch (e) {}
+        }
+      }
+      function beep(freq = 880, ms = 120) {
+        if (!audioCtx) return;
+        const o = audioCtx.createOscillator();
+        const g = audioCtx.createGain();
+        o.type = "square";
+        o.frequency.value = freq;
+        g.gain.value = 0.06;
+        o.connect(g);
+        g.connect(audioCtx.destination);
+        o.start();
+        setTimeout(() => {
+          o.stop();
+        }, ms);
+      }
 
-  // ----- Keyboard layout -----
-  const rows = [
-    ['1','2','3','4','5','6','7','8','9','0','-','\\'],
-    ['Q','W','E','R','T','Y','U','I','O','P'],
-    ['A','S','D','F','G','H','J','K','L',':'],
-    ['Z','X','C','V','B','N','M','.','/'],
-  ];
-  function makeKey(ch){ const b=document.createElement('button'); b.className='key'; b.textContent=ch; b.dataset.key=ch; return b; }
+      // ----- Fake filesystem -----
+      const now = new Date();
+      const DATE = ((d) => {
+        const pad = (n) => String(n).padStart(2, "0");
+        const m = pad(d.getMonth() + 1),
+          Day = pad(d.getDate()),
+          Y = d.getFullYear().toString().slice(-2);
+        const h = pad(d.getHours()),
+          min = pad(d.getMinutes());
+        return { date: `${m}-${Day}-${Y}`, time: `${h}:${min}` };
+      })(now);
 
-  function buildKeyboard(){
-    const r0=document.getElementById('r0'); const r1=document.getElementById('r1'); const r2=document.getElementById('r2'); const r3=document.getElementById('r3'); const r4=document.getElementById('r4');
-    // row 0: Control keys + digits
-    const ctrl = [ ['TAB','TAB'], ['UP','HIST↑'], ['DN','HIST↓'], ['BKSP','BKSP'], ];
-    for(const [code,label] of ctrl){ const b=document.createElement('button'); b.className='key tiny'; b.textContent=label; b.dataset.key=code; r0.appendChild(b); }
-    for(const ch of rows[0]) r0.appendChild(makeKey(ch));
+      function file(content) {
+        return { type: "file", content };
+      }
+      function dir(children = {}) {
+        return { type: "dir", children };
+      }
+      function app(name, run) {
+        return { type: "app", name, run };
+      }
 
-    for(const ch of rows[1]) r1.appendChild(makeKey(ch));
-    for(const ch of rows[2]) r2.appendChild(makeKey(ch));
+      const FS = {
+        "C:": dir({
+          "AUTOEXEC.BAT": file(
+            "@ECHO OFF\r\nPROMPT $P$G\r\nPATH C:\\DOS;C:\\UTILS\r\n"
+          ),
+          "CONFIG.SYS": file(
+            "DEVICE=HIMEM.SYS\r\nDOS=HIGH,UMB\r\nFILES=30\r\nBUFFERS=20\r\n"
+          ),
+          "README.TXT": file(
+            "Welcome to Pocket DOS (sim).\r\n\r\nTry commands: DIR, CLS, TYPE README.TXT, HELP, VER, TIME, DATE, CD NOTES, TYPE TODO.TXT, RUN DEMO, BEEP, TESTS.\r\n"
+          ),
+          NOTES: dir({
+            "TODO.TXT": file(
+              "- Finish the space trader prototype\r\n- Record DOS simulator demo\r\n- Buy floppies (just kidding)\r\n"
+            ),
+          }),
+          GAMES: dir({ "DEMO.EXE": app("DEMO", "demo") }),
+          DOS: dir({
+            "COMMAND.COM": file(
+              "This file does nothing here, but it looks legit.\r\n"
+            ),
+          }),
+        }),
+      };
 
-    // row 3 letters + special
-    for(const ch of rows[3]) r3.appendChild(makeKey(ch));
+      let cwd = ["C:"];
 
-    // bottom row: SHIFT, SPACE, ENTER
-    const bottom = [
-      ['SHIFT','SHIFT'], ['SPACE','SPACE'], ['ENTER','ENTER']
-    ];
-    for(const [code,label] of bottom){ const b=document.createElement('button'); b.className='key ' + (code==='SPACE'?'xwide': (code==='SHIFT'?'wide':'')); b.textContent=label; b.dataset.key=code; r4.appendChild(b); }
-  }
+      function pathString() {
+        return cwd.join("\\") + ">";
+      }
+      function nodeAtPath(pathParts) {
+        let node = FS;
+        for (const p of pathParts) {
+          if (!node[p]) return null;
+          node = node[p];
+          if (node.type === "dir") node = node.children;
+        }
+        return node; // for files/apps you get the node, for dirs you get its map
+      }
+      function resolve(path) {
+        // returns [type, node] or [null,null]
+        const parts = path.replace(/\\/g, "/").split("/").filter(Boolean);
+        let ref = path.match(/^[A-Za-z]:/) ? [path.slice(0, 2)] : [...cwd];
+        for (const part of parts) {
+          if (part === ".") continue;
+          if (part === "..") {
+            if (ref.length > 1) ref.pop();
+            continue;
+          }
+          const here = nodeAtPath(ref);
+          if (!here || !here[part]) return [null, null];
+          const n = here[part];
+          if (n.type === "dir") ref.push(part);
+          else return [n.type, n];
+        }
+        return ["dir", nodeAtPath(ref)];
+      }
 
-  let shift=false;
-  function pressKey(code){
-    initAudio();
-    if(code.length===1){ handleChar(shift? code : code.toLowerCase()); if(shift) shift=false; return; }
-    switch(code){
-      case 'SHIFT': shift=!shift; break;
-      case 'SPACE': handleChar(' '); break;
-      case 'TAB': handleChar('    '); break;
-      case 'ENTER': submit(); break;
-      case 'BKSP': backspace(); break;
-      case 'UP': upHistory(); break;
-      case 'DN': downHistory(); break;
-      default: // unknown
-    }
-  }
+      // ----- Command interpreter -----
+      let lineBuffer = "";
+      let history = [];
+      let histIdx = -1;
+      let cursorVisible = true;
+      let promptActive = false;
+      let cursorTimer;
 
-  // Command chips
-  document.getElementById('cmdbar').addEventListener('click', (e)=>{
-    const b = e.target.closest('[data-cmd]'); if(!b) return; const c=b.dataset.cmd; typeCommand(c);
-  });
-  function typeCommand(c){
-    // write command to buffer and submit
-    if(!promptActive){ return; }
-    setLine(c); submit();
-  }
+      function drawPrompt() {
+        promptActive = true;
+        lineBuffer = "";
+        print(`\n${pathString()} `);
+        startCursor();
+      }
+      function startCursor() {
+        stopCursor();
+        cursorTimer = setInterval(() => {
+          if (!promptActive) return;
+          cursorVisible = !cursorVisible;
+          renderCursor();
+        }, 530);
+        renderCursor();
+      }
+      function stopCursor() {
+        clearInterval(cursorTimer);
+      }
+      function renderCursor() {
+        // rewrite current line: remove any existing cursor char
+        const txt = screen.textContent.replace(/▌$/, "");
+        screen.textContent = txt;
+        if (promptActive) {
+          print(cursorVisible ? "▌" : " ");
+        }
+      }
 
-  // Physical keyboard support
-  window.addEventListener('keydown', (e)=>{
-    if(e.key==='Backspace'){ e.preventDefault(); backspace(); return; }
-    if(e.key==='Enter'){ e.preventDefault(); submit(); return; }
-    if(e.key==='ArrowUp'){ e.preventDefault(); upHistory(); return; }
-    if(e.key==='ArrowDown'){ e.preventDefault(); downHistory(); return; }
-    if(e.key==='Tab'){ e.preventDefault(); handleChar('    '); return; }
-    if(e.key.length===1){ handleChar(e.key.toUpperCase()); return; }
-  }, {passive:false});
+      function setLine(text) {
+        // replace buffer visually
+        const noCursor = screen.textContent.replace(/▌$/, "");
+        // Remove previous buffer characters (after last '> ')
+        const idx = noCursor.lastIndexOf("> ");
+        const base = noCursor.slice(0, idx + 2);
+        screen.textContent = base + " " + text;
+        lineBuffer = text;
+        renderCursor();
+      }
 
-  kb.addEventListener('click', (e)=>{
-    const b=e.target.closest('.key'); if(!b) return; const k=b.dataset.key; pressKey(k);
-  });
+      function handleChar(ch) {
+        if (!promptActive) return;
+        setLine(lineBuffer + ch);
+      }
+      function backspace() {
+        if (!promptActive) return;
+        setLine(lineBuffer.slice(0, -1));
+      }
+      function submit() {
+        if (!promptActive) return;
+        promptActive = false;
+        stopCursor();
+        // finalize line
+        const noCursor = screen.textContent.replace(/▌$/, "");
+        screen.textContent = noCursor + "\n";
+        const cmd = lineBuffer.trim();
+        if (cmd) history.unshift(cmd);
+        histIdx = -1;
+        exec(cmd);
+      }
 
-  buildKeyboard();
+      function upHistory() {
+        if (history.length === 0) return;
+        histIdx = Math.min(histIdx + 1, history.length - 1);
+        setLine(history[histIdx]);
+      }
+      function downHistory() {
+        if (history.length === 0) return;
+        histIdx = Math.max(histIdx - 1, -1);
+        setLine(histIdx === -1 ? "" : history[histIdx]);
+      }
 
-  // ----- Self-tests -----
-  function runSelfTests(verbose=false){
-    const results=[]; const ok=(name)=>results.push({name, pass:true}); const fail=(name,err)=>results.push({name, pass:false, err:String(err).slice(0,140)});
+      function exec(raw) {
+        const input = raw;
+        const parts = raw.split(/\s+/).filter(Boolean);
+        const cmd = (parts.shift() || "").toUpperCase();
+        if (!cmd) {
+          drawPrompt();
+          return;
+        }
 
-    // Preserve state
-    const saved={ text: screen.textContent, promptActive, lineBuffer, histIdx, history: history.slice(0) };
-    stopCursor();
-    try{
-      // 1: helpCmd exists
-      try{ if(typeof helpCmd!=="function") throw new Error('helpCmd missing'); ok('helpCmd exists'); }catch(e){ fail('helpCmd exists', e); }
+        const joinRest = () => input.slice(cmd.length).trim();
 
-      // 2: exec('HELP') runs without throwing (muted)
-      try{ __MUTE=true; exec('HELP'); ok('HELP executes'); }catch(e){ fail('HELP executes', e); } finally { __MUTE=false; }
-
-      // 3: dir/type basic sanity (muted)
-      try{ __MUTE=true; dirCmd(); typeCmd('README.TXT'); ok('DIR/TYPE basic'); }catch(e){ fail('DIR/TYPE basic', e); } finally { __MUTE=false; }
-    } finally {
-      // restore state
-      screen.textContent = saved.text;
-      promptActive = saved.promptActive;
-      lineBuffer = saved.lineBuffer;
-      histIdx = saved.histIdx;
-      history = saved.history;
-      if(promptActive) startCursor(); else stopCursor();
-      scrollToEnd();
-    }
-
-    const allPass = results.every(r=>r.pass);
-    if(verbose){
-      println('\nSelf-tests results:');
-      for(const r of results){ println(` - ${r.name}: ${r.pass? 'OK':'FAIL'}${r.err? ' — '+r.err:''}`); }
-      println(allPass? 'All tests passed.' : 'Some tests failed.');
-    }
-    return allPass;
-  }
-
-  // ----- Boot sequence -----
-  function boot(fromReboot){
-    screen.textContent='';
-    println('American Megatrends, Inc. BIOS (C) 1992-95');
-    println('Pentium(TM) CPU at 100 MHz  \n640K Base Memory, 64M Extended');
-    println('Detecting IDE drives ... OK');
-    println('Booting from C: ...');
-    setTimeout(()=>{
-      println('\nStarting MS-DOS...');
-      setTimeout(()=>{ println('HIMEM is testing extended memory... done.'); }, 400);
-      setTimeout(()=>{ println('\nMicrosoft(R) MS-DOS(R) Version 6.22'); }, 900);
-      setTimeout(()=>{ println('Copyright (C) Microsoft Corp 1981-1994.'); }, 1200);
-      setTimeout(()=>{
-        if(fromReboot) beep(660,90);
-        const pass = runSelfTests(false);
-        println(pass? 'Self-tests: PASS' : 'Self-tests: FAIL (type TESTS for details)');
+        switch (cmd) {
+          case "CLS":
+            screen.textContent = "";
+            break;
+          case "DIR":
+            dirCmd();
+            break;
+          case "CD":
+            cdCmd(parts[0]);
+            break;
+          case "TYPE":
+            typeCmd(joinRest());
+            break;
+          case "ECHO":
+            println(joinRest());
+            break;
+          case "HELP":
+            helpCmd();
+            break;
+          case "VER":
+            println("MS-DOS Version 6.22 (sim)");
+            break;
+          case "TIME":
+            println(`Current time: ${DATE.time}`);
+            break;
+          case "DATE":
+            println(`Current date: ${DATE.date}`);
+            break;
+          case "MEM":
+            println(
+              "655,360 bytes total conventional memory\n615,000 bytes free (simulated)"
+            );
+            break;
+          case "RUN":
+            runCmd(parts.join(" "));
+            break;
+          case "BEEP":
+            initAudio();
+            beep(880, 120);
+            println("Beep!");
+            break;
+          case "REBOOT":
+            boot(true);
+            return; // boot draws its own prompt
+          case "TESTS":
+            runSelfTests(true);
+            break;
+          default:
+            // app by name
+            if (tryRunByName(cmd)) {
+            } else {
+              println(
+                `'${cmd}' is not recognized as an internal or external command, operable program or batch file.`
+              );
+            }
+        }
         drawPrompt();
-      }, 1500);
-    }, 700);
-  }
+      }
 
-  // Power LED animation
-  let on=true; setInterval(()=>{ on=!on; statusEl.textContent = `POWER ${on? '◉':'○'}`; }, 1200);
+      function dirCmd() {
+        const here = nodeAtPath(cwd);
+        const keys = Object.keys(here);
+        println(`\n Volume in drive C is POCKETDOS`);
+        println(` Directory of ${cwd.join("\\")}\\`);
+        println("");
+        for (const k of keys) {
+          const n = here[k];
+          const isDir = n.type === "dir";
+          println(
+            ` ${DATE.date}  ${DATE.time}${
+              isDir ? "  <DIR> " : "         "
+            } ${k}`
+          );
+        }
+      }
 
-  // Kick off
-  boot(false);
-})();
+      function cdCmd(arg) {
+        if (!arg) {
+          println(cwd.join("\\"));
+          return;
+        }
+        if (arg === "..") {
+          if (cwd.length > 1) cwd.pop();
+          else println("Already at root.");
+          return;
+        }
+        const here = nodeAtPath(cwd);
+        if (here && here[arg] && here[arg].type === "dir") {
+          cwd.push(arg);
+        } else {
+          println("The system cannot find the path specified.");
+        }
+      }
 
+      function typeCmd(path) {
+        if (!path) {
+          println("File name required.");
+          return;
+        }
+        const [t, n] = resolve(path);
+        if (!t) {
+          println("File not found.");
+          return;
+        }
+        if (t === "file") {
+          println("\n" + n.content.replaceAll("\r\n", "\n"));
+        } else {
+          println("Cannot TYPE this item.");
+        }
+      }
+
+      function runCmd(name) {
+        if (!name) {
+          println("Specify program name.");
+          return;
+        }
+        tryRunByName(name.toUpperCase());
+      }
+      function tryRunByName(name) {
+        // with or without .EXE
+        const prog = name.replace(/\.EXE$/i, "");
+        const here = nodeAtPath(cwd);
+        const keyExe = prog + ".EXE";
+        if (here && here[keyExe] && here[keyExe].type === "app") {
+          return runApp(here[keyExe].run);
+        }
+        // also check in C:\\GAMES
+        const games = nodeAtPath(["C:", "GAMES"]);
+        if (games && games[keyExe] && games[keyExe].type === "app") {
+          return runApp(games[keyExe].run);
+        }
+        return false;
+      }
+      function runApp(id) {
+        switch (id) {
+          case "demo":
+            return demoApp();
+          default:
+            println("This program cannot be run in this DOS box.");
+            return true;
+        }
+      }
+      function demoApp() {
+        println("Launching DEMO.EXE...");
+        // Tiny ASCII starfield demo for ~3 seconds
+        const W = 38,
+          H = 10;
+        let t = 0;
+        let frames = 0;
+        const maxFrames = 90;
+        const anchorLen = screen.textContent.length;
+        const timer = setInterval(() => {
+          frames++;
+          t += 1;
+          const rows = [];
+          for (let y = 0; y < H; y++) {
+            let row = "";
+            for (let x = 0; x < W; x++) {
+              const v =
+                Math.sin((x + t * 0.6) * 0.5) + Math.cos(y * 1.3 + t * 0.37);
+              row += v > 1.1 ? "*" : v > 0.9 ? "." : " ";
+            }
+            rows.push(row);
+          }
+          // erase to anchor
+          screen.textContent = screen.textContent.slice(0, anchorLen);
+          println(rows.join("\n"));
+          if (frames >= maxFrames) {
+            clearInterval(timer);
+            println("DEMO finished.");
+            drawPrompt();
+          }
+          scrollToEnd();
+        }, 33);
+        return true;
+      }
+
+      // ----- HELP -----
+      function helpCmd() {
+        println("\nPOCKET DOS (sim) Help");
+        println("----------------------");
+        println(" DIR                list files and folders");
+        println(' CD <DIR>          change directory  (use "CD .." to go up)');
+        println(" TYPE <FILE>       print a text file");
+        println(" ECHO <TEXT>       output text");
+        println(" CLS               clear screen");
+        println(" VER | DATE | TIME | MEM");
+        println(" RUN <NAME>        run a program (e.g., RUN DEMO)");
+        println(" BEEP              beep the PC speaker");
+        println(" TESTS             run built-in self tests");
+        println(" REBOOT            reboot the simulated PC");
+        println("\nTips: tap the chips above the keyboard for quick commands.");
+      }
+
+      // ----- Keyboard layout -----
+      const rows = [
+        ["1", "2", "3", "4", "5", "6", "7", "8", "9", "0", "-", "\\"],
+        ["Q", "W", "E", "R", "T", "Y", "U", "I", "O", "P"],
+        ["A", "S", "D", "F", "G", "H", "J", "K", "L", ":"],
+        ["Z", "X", "C", "V", "B", "N", "M", ".", "/"],
+      ];
+      function makeKey(ch) {
+        const b = document.createElement("button");
+        b.className = "key";
+        b.textContent = ch;
+        b.dataset.key = ch;
+        return b;
+      }
+
+      function buildKeyboard() {
+        const r0 = document.getElementById("r0");
+        const r1 = document.getElementById("r1");
+        const r2 = document.getElementById("r2");
+        const r3 = document.getElementById("r3");
+        const r4 = document.getElementById("r4");
+        // row 0: Control keys + digits
+        const ctrl = [
+          ["TAB", "TAB"],
+          ["UP", "HIST↑"],
+          ["DN", "HIST↓"],
+          ["BKSP", "BKSP"],
+        ];
+        for (const [code, label] of ctrl) {
+          const b = document.createElement("button");
+          b.className = "key tiny";
+          b.textContent = label;
+          b.dataset.key = code;
+          r0.appendChild(b);
+        }
+        for (const ch of rows[0]) r0.appendChild(makeKey(ch));
+
+        for (const ch of rows[1]) r1.appendChild(makeKey(ch));
+        for (const ch of rows[2]) r2.appendChild(makeKey(ch));
+
+        // row 3 letters + special
+        for (const ch of rows[3]) r3.appendChild(makeKey(ch));
+
+        // bottom row: SHIFT, SPACE, ENTER
+        const bottom = [
+          ["SHIFT", "SHIFT"],
+          ["SPACE", "SPACE"],
+          ["ENTER", "ENTER"],
+        ];
+        for (const [code, label] of bottom) {
+          const b = document.createElement("button");
+          b.className =
+            "key " +
+            (code === "SPACE" ? "xwide" : code === "SHIFT" ? "wide" : "");
+          b.textContent = label;
+          b.dataset.key = code;
+          r4.appendChild(b);
+        }
+      }
+
+      let shift = false;
+      function pressKey(code) {
+        initAudio();
+        if (code.length === 1) {
+          handleChar(shift ? code : code.toLowerCase());
+          if (shift) shift = false;
+          return;
+        }
+        switch (code) {
+          case "SHIFT":
+            shift = !shift;
+            break;
+          case "SPACE":
+            handleChar(" ");
+            break;
+          case "TAB":
+            handleChar("    ");
+            break;
+          case "ENTER":
+            submit();
+            break;
+          case "BKSP":
+            backspace();
+            break;
+          case "UP":
+            upHistory();
+            break;
+          case "DN":
+            downHistory();
+            break;
+          default: // unknown
+        }
+      }
+
+      // Command chips
+      document.getElementById("cmdbar").addEventListener("click", (e) => {
+        const b = e.target.closest("[data-cmd]");
+        if (!b) return;
+        const c = b.dataset.cmd;
+        typeCommand(c);
+      });
+      function typeCommand(c) {
+        // write command to buffer and submit
+        if (!promptActive) {
+          return;
+        }
+        setLine(c);
+        submit();
+      }
+
+      // Physical keyboard support
+      window.addEventListener(
+        "keydown",
+        (e) => {
+          if (e.key === "Backspace") {
+            e.preventDefault();
+            backspace();
+            return;
+          }
+          if (e.key === "Enter") {
+            e.preventDefault();
+            submit();
+            return;
+          }
+          if (e.key === "ArrowUp") {
+            e.preventDefault();
+            upHistory();
+            return;
+          }
+          if (e.key === "ArrowDown") {
+            e.preventDefault();
+            downHistory();
+            return;
+          }
+          if (e.key === "Tab") {
+            e.preventDefault();
+            handleChar("    ");
+            return;
+          }
+          if (e.key.length === 1) {
+            handleChar(e.key.toUpperCase());
+            return;
+          }
+        },
+        { passive: false }
+      );
+
+      kb.addEventListener("click", (e) => {
+        const b = e.target.closest(".key");
+        if (!b) return;
+        const k = b.dataset.key;
+        pressKey(k);
+      });
+
+      buildKeyboard();
+
+      // ----- Self-tests -----
+      function runSelfTests(verbose = false) {
+        const results = [];
+        const ok = (name) => results.push({ name, pass: true });
+        const fail = (name, err) =>
+          results.push({ name, pass: false, err: String(err).slice(0, 140) });
+
+        // Preserve state
+        const saved = {
+          text: screen.textContent,
+          promptActive,
+          lineBuffer,
+          histIdx,
+          history: history.slice(0),
+        };
+        stopCursor();
+        try {
+          // 1: helpCmd exists
+          try {
+            if (typeof helpCmd !== "function")
+              throw new Error("helpCmd missing");
+            ok("helpCmd exists");
+          } catch (e) {
+            fail("helpCmd exists", e);
+          }
+
+          // 2: exec('HELP') runs without throwing (muted)
+          try {
+            __MUTE = true;
+            exec("HELP");
+            ok("HELP executes");
+          } catch (e) {
+            fail("HELP executes", e);
+          } finally {
+            __MUTE = false;
+          }
+
+          // 3: dir/type basic sanity (muted)
+          try {
+            __MUTE = true;
+            dirCmd();
+            typeCmd("README.TXT");
+            ok("DIR/TYPE basic");
+          } catch (e) {
+            fail("DIR/TYPE basic", e);
+          } finally {
+            __MUTE = false;
+          }
+        } finally {
+          // restore state
+          screen.textContent = saved.text;
+          promptActive = saved.promptActive;
+          lineBuffer = saved.lineBuffer;
+          histIdx = saved.histIdx;
+          history = saved.history;
+          if (promptActive) startCursor();
+          else stopCursor();
+          scrollToEnd();
+        }
+
+        const allPass = results.every((r) => r.pass);
+        if (verbose) {
+          println("\nSelf-tests results:");
+          for (const r of results) {
+            println(
+              ` - ${r.name}: ${r.pass ? "OK" : "FAIL"}${
+                r.err ? " — " + r.err : ""
+              }`
+            );
+          }
+          println(allPass ? "All tests passed." : "Some tests failed.");
+        }
+        return allPass;
+      }
+
+      // ----- Boot sequence -----
+      function boot(fromReboot) {
+        screen.textContent = "";
+        println("American Megatrends, Inc. BIOS (C) 1992-95");
+        println("Pentium(TM) CPU at 100 MHz  \n640K Base Memory, 64M Extended");
+        println("Detecting IDE drives ... OK");
+        println("Booting from C: ...");
+        setTimeout(() => {
+          println("\nStarting MS-DOS...");
+          setTimeout(() => {
+            println("HIMEM is testing extended memory... done.");
+          }, 400);
+          setTimeout(() => {
+            println("\nMicrosoft(R) MS-DOS(R) Version 6.22");
+          }, 900);
+          setTimeout(() => {
+            println("Copyright (C) Microsoft Corp 1981-1994.");
+          }, 1200);
+          setTimeout(() => {
+            if (fromReboot) beep(660, 90);
+            const pass = runSelfTests(false);
+            println(
+              pass
+                ? "Self-tests: PASS"
+                : "Self-tests: FAIL (type TESTS for details)"
+            );
+            drawPrompt();
+          }, 1500);
+        }, 700);
+      }
+
+      // Power LED animation
+      let on = true;
+      setInterval(() => {
+        on = !on;
+        statusEl.textContent = `POWER ${on ? "◉" : "○"}`;
+      }, 1200);
+
+      // Kick off
+      boot(false);
+    })();
   }, []);
 
   const css = `
@@ -476,33 +796,53 @@ export default function Console(): JSX.Element {
     <>
       <style>{css}</style>
       <div className="wrap">
-          <div className="crt" id="crt">
-            <div className="inner"><pre id="screen"></pre></div>
-            <div className="glass"></div>
-            <div className="vignette"></div>
-            <div className="status" id="status">POWER ◉</div>
+        <div className="crt" id="crt">
+          <div className="inner">
+            <pre id="screen"></pre>
           </div>
-      
-          <div className="kb" id="kb">
-            <div className="bar" id="cmdbar">
-              <button className="chip" data-cmd="DIR">DIR</button>
-              <button className="chip" data-cmd="CLS">CLS</button>
-              <button className="chip" data-cmd="CD ..">CD ..</button>
-              <button className="chip" data-cmd="TYPE README.TXT">TYPE README.TXT</button>
-              <button className="chip" data-cmd="HELP">HELP</button>
-              <button className="chip" data-cmd="RUN DEMO">RUN DEMO</button>
-              <button className="chip" data-cmd="BEEP">BEEP</button>
-              <button className="chip" data-cmd="REBOOT">REBOOT</button>
-            </div>
-            <div className="rows">
-              <div className="row" id="r0"></div>
-              <div className="row" id="r1"></div>
-              <div className="row" id="r2"></div>
-              <div className="row" id="r3"></div>
-              <div className="row" id="r4"></div>
-            </div>
+          <div className="glass"></div>
+          <div className="vignette"></div>
+          <div className="status" id="status">
+            POWER ◉
           </div>
         </div>
+
+        <div className="kb" id="kb">
+          <div className="bar" id="cmdbar">
+            <button className="chip" data-cmd="DIR">
+              DIR
+            </button>
+            <button className="chip" data-cmd="CLS">
+              CLS
+            </button>
+            <button className="chip" data-cmd="CD ..">
+              CD ..
+            </button>
+            <button className="chip" data-cmd="TYPE README.TXT">
+              TYPE README.TXT
+            </button>
+            <button className="chip" data-cmd="HELP">
+              HELP
+            </button>
+            <button className="chip" data-cmd="RUN DEMO">
+              RUN DEMO
+            </button>
+            <button className="chip" data-cmd="BEEP">
+              BEEP
+            </button>
+            <button className="chip" data-cmd="REBOOT">
+              REBOOT
+            </button>
+          </div>
+          <div className="rows">
+            <div className="row" id="r0"></div>
+            <div className="row" id="r1"></div>
+            <div className="row" id="r2"></div>
+            <div className="row" id="r3"></div>
+            <div className="row" id="r4"></div>
+          </div>
+        </div>
+      </div>
     </>
   );
 }

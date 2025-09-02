@@ -1,16 +1,16 @@
 import { useEffect, useRef, useState } from "react";
 
 interface Message {
-    who: "you" | "them";
-    text: string;
+  who: "you" | "them";
+  text: string;
 }
 
 interface ChatProps {
-    onComplete?: () => void;
+  onComplete?: () => void;
 }
 
 export default function Chat({ onComplete }: ChatProps): JSX.Element {
-    const css = `
+  const css = `
   /* === Scoped styles inside component === */
   .baylike {
     --bg:#0f141a; --panel:#141b22; --panel-2:#0b1117; --accent:#2f81f7; --accent-2:#1e5fd6;
@@ -67,157 +67,219 @@ export default function Chat({ onComplete }: ChatProps): JSX.Element {
   .baylike .send:disabled{ opacity:.6; cursor:default }
   `;
 
-    const script: Message[] = [
-        { who: "you", text: "Hey! Quick question about the W1‑SH — is its CPU 8088‑compatible? Would it run DOS?" },
-        { who: "them", text: "I'm not sure, sorry. It was my dad's." },
-        { who: "you", text: "Could you ask him?" },
-        { who: "them", text: "I wish I could. He disappeared three years ago. We still don't know what happened. Sorry." },
-        { who: "you", text: "Oh no… I'm really sorry. And the price is still $50?" },
-        { who: "them", text: "Yeah — fifty. Basically the price of a Starbucks coffee these days." },
-        { who: "you", text: "Alright, I'll take it." }
-    ];
+  const script: Message[] = [
+    {
+      who: "you",
+      text: "Hey! Quick question about the W1-SH - is its CPU 8088-compatible? Would it run DOS?",
+    },
+    { who: "them", text: "I'm not sure, sorry. It was my dad's." },
+    { who: "you", text: "Could you ask him?" },
+    {
+      who: "them",
+      text: "I wish I could. He disappeared three years ago. We still don't know what happened. Sorry.",
+    },
+    {
+      who: "you",
+      text: "Oh no… I'm really sorry. And the price is still $50?",
+    },
+    {
+      who: "them",
+      text: "Yeah — fifty. Basically the price of a Starbucks coffee these days.",
+    },
+    { who: "you", text: "Alright, I'll take it." },
+  ];
 
-    const chatRef = useRef<HTMLDivElement | null>(null);
-    const textareaRef = useRef<HTMLTextAreaElement | null>(null);
-    const typingIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
-    const timeoutsRef = useRef<Array<ReturnType<typeof setTimeout>>>([]); // keep track to clean up
-    const idxRef = useRef<number>(0);
+  const chatRef = useRef<HTMLDivElement | null>(null);
+  const textareaRef = useRef<HTMLTextAreaElement | null>(null);
+  const typingIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const timeoutsRef = useRef<Array<ReturnType<typeof setTimeout>>>([]); // keep track to clean up
+  const idxRef = useRef<number>(0);
 
-    const [messages, setMessages] = useState<Message[]>([]); // {who, text}[]
-    const [composerText, setComposerText] = useState<string>("");
-    const [awaitingSend, setAwaitingSend] = useState<boolean>(false);
-    const [typing, setTyping] = useState<boolean>(false);
-    const [done, setDone] = useState<boolean>(false);
+  const [messages, setMessages] = useState<Message[]>([]); // {who, text}[]
+  const [composerText, setComposerText] = useState<string>("");
+  const [awaitingSend, setAwaitingSend] = useState<boolean>(false);
+  const [typing, setTyping] = useState<boolean>(false);
+  const [done, setDone] = useState<boolean>(false);
 
-    const scrollBottom = (): void => {
-        const el = chatRef.current; if (!el) return;
-        el.scrollTo({ top: el.scrollHeight, behavior: "smooth" });
+  const scrollBottom = (): void => {
+    const el = chatRef.current;
+    if (!el) return;
+    el.scrollTo({ top: el.scrollHeight, behavior: "smooth" });
+  };
+
+  useEffect(() => {
+    scrollBottom();
+  }, [messages, typing]);
+  useEffect(() => {
+    const el = textareaRef.current;
+    if (!el) return;
+    el.style.height = "0px";
+    el.style.height = `${el.scrollHeight}px`;
+  }, [composerText]);
+
+  useEffect(() => {
+    nextStep();
+    return () => {
+      if (typingIntervalRef.current) clearInterval(typingIntervalRef.current);
+      timeoutsRef.current.forEach(clearTimeout);
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
-    useEffect(() => { scrollBottom(); }, [messages, typing]);
-    useEffect(() => {
-        const el = textareaRef.current;
-        if (!el) return;
-        el.style.height = '0px';
-        el.style.height = `${el.scrollHeight}px`;
-    }, [composerText]);
+  function schedule(fn: () => void, ms: number): ReturnType<typeof setTimeout> {
+    const id = setTimeout(fn, ms);
+    timeoutsRef.current.push(id);
+    return id;
+  }
 
-    useEffect(() => {
-        nextStep();
-        return () => {
-            if (typingIntervalRef.current) clearInterval(typingIntervalRef.current);
-            timeoutsRef.current.forEach(clearTimeout);
-        };
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []);
+  function typeIntoComposer(text: string): void {
+    setComposerText("");
+    setAwaitingSend(false);
+    if (typingIntervalRef.current) clearInterval(typingIntervalRef.current);
+    let i = 0;
+    typingIntervalRef.current = setInterval(() => {
+      const burst = Math.random() < 0.2 ? 2 : 1;
+      let chunk = "";
+      for (let b = 0; b < burst && i < text.length; b++, i++) chunk += text[i];
+      setComposerText((prev) => prev + chunk);
+      if (i >= text.length) {
+        clearInterval(typingIntervalRef.current!);
+        typingIntervalRef.current = null;
+        setAwaitingSend(true);
+      }
+    }, 18 + Math.floor(Math.random() * 12));
+  }
 
-    function schedule(fn: () => void, ms: number): ReturnType<typeof setTimeout> {
-        const id = setTimeout(fn, ms);
-        timeoutsRef.current.push(id);
-        return id;
+  function nextStep(): void {
+    if (idxRef.current >= script.length) {
+      setDone(true);
+      setAwaitingSend(false);
+      setComposerText("");
+      if (onComplete) onComplete();
+      return;
     }
-
-    function typeIntoComposer(text: string): void {
-        setComposerText("");
-        setAwaitingSend(false);
-        if (typingIntervalRef.current) clearInterval(typingIntervalRef.current);
-        let i = 0;
-        typingIntervalRef.current = setInterval(() => {
-            const burst = Math.random() < 0.2 ? 2 : 1;
-            let chunk = "";
-            for (let b = 0; b < burst && i < text.length; b++, i++) chunk += text[i];
-            setComposerText(prev => prev + chunk);
-            if (i >= text.length) {
-                clearInterval(typingIntervalRef.current!);
-                typingIntervalRef.current = null;
-                setAwaitingSend(true);
-            }
-        }, 18 + Math.floor(Math.random() * 12));
-    }
-
-    function nextStep(): void {
-        if (idxRef.current >= script.length) {
-            setDone(true);
-            setAwaitingSend(false);
-            setComposerText("");
-            if (onComplete) onComplete();
-            return;
-        }
-        const line = script[idxRef.current];
-        if (line.who === "you") {
-            typeIntoComposer(line.text);
-        } else {
-            const base = 500;
-            const perChar = 28;
-            const ms = Math.min(2500, base + perChar * Math.min(90, line.text.length));
-            setTyping(true);
-            schedule(() => {
-                setTyping(false);
-                setMessages(prev => [...prev, { who: "them", text: line.text }]);
-                idxRef.current += 1;
-                schedule(() => nextStep(), 280);
-            }, ms);
-        }
-    }
-
-    function onSend(): void {
-        if (!awaitingSend || !composerText.trim()) return;
-        setMessages(prev => [...prev, { who: "you", text: composerText.trim() }]);
-        setComposerText("");
-        setAwaitingSend(false);
+    const line = script[idxRef.current];
+    if (line.who === "you") {
+      typeIntoComposer(line.text);
+    } else {
+      const base = 500;
+      const perChar = 28;
+      const ms = Math.min(
+        2500,
+        base + perChar * Math.min(90, line.text.length)
+      );
+      setTyping(true);
+      schedule(() => {
+        setTyping(false);
+        setMessages((prev) => [...prev, { who: "them", text: line.text }]);
         idxRef.current += 1;
-        schedule(() => nextStep(), 360);
+        schedule(() => nextStep(), 280);
+      }, ms);
     }
+  }
 
-    return (
-        <div className="baylike" role="application" aria-label="BayLike chat simulator">
-            <style>{css}</style>
-            <div className="baylike-header">
-                <div className="nav">
-                    <div className="logo-badge">B</div>
-                    <div className="brand">BayLike</div>
-                    <div className="muted" style={{ marginLeft: "auto" }}>Secure • Buyer Protection</div>
-                </div>
-            </div>
+  function onSend(): void {
+    if (!awaitingSend || !composerText.trim()) return;
+    setMessages((prev) => [...prev, { who: "you", text: composerText.trim() }]);
+    setComposerText("");
+    setAwaitingSend(false);
+    idxRef.current += 1;
+    schedule(() => nextStep(), 360);
+  }
 
-            <main className="shell">
-                <section className="card chat" aria-live="polite" aria-label="Chat with seller">
-                    <div className="chat-head">
-                        <div><strong>Messages</strong> <span className="muted">with Emilia • W1‑SH</span></div>
-                        <div className="muted">Order: #7421</div>
-                    </div>
-
-                    <div ref={chatRef} className="chat-body" role="log" aria-label="Chat transcript">
-                        {messages.map((m, i) => (
-                            <div key={i} className={`msg ${m.who === 'you' ? 'you' : 'them'}`}>
-                                <div className={`avatar ${m.who === 'you' ? '' : 'them'}`}>{m.who === 'you' ? 'YOU' : 'ES'}</div>
-                                <div>
-                                    <div className="bubble">{m.text}</div>
-                                    <div className="meta">{m.who === 'you' ? 'You' : 'Emilia'}</div>
-                                </div>
-                            </div>
-                        ))}
-
-                        {typing && (
-                            <div className="msg them" data-typing="1">
-                                <div className="avatar them">ES</div>
-                                <div className="typing"><span>Emilia is typing</span> <span className="dots"><span></span><span></span><span></span></span></div>
-                            </div>
-                        )}
-
-                        {done && (
-                            <div className="meta" style={{ alignSelf: 'center', margin: '8px auto 12px' }}>Conversation complete.</div>
-                        )}
-                    </div>
-
-                    <div className="composer">
-                        <div className="input">
-                            <textarea ref={textareaRef} readOnly aria-label="Message composer (auto-typing)" value={composerText} />
-                        </div>
-                        <button className="send" onClick={onSend} disabled={!awaitingSend}>Send</button>
-                    </div>
-                </section>
-            </main>
+  return (
+    <div
+      className="baylike"
+      role="application"
+      aria-label="BayLike chat simulator"
+    >
+      <style>{css}</style>
+      <div className="baylike-header">
+        <div className="nav">
+          <div className="logo-badge">B</div>
+          <div className="brand">BayLike</div>
+          <div className="muted" style={{ marginLeft: "auto" }}>
+            Secure • Buyer Protection
+          </div>
         </div>
-    );
+      </div>
+
+      <main className="shell">
+        <section
+          className="card chat"
+          aria-live="polite"
+          aria-label="Chat with seller"
+        >
+          <div className="chat-head">
+            <div>
+              <strong>Messages</strong>{" "}
+              <span className="muted">with Emilia • W1-SH</span>
+            </div>
+            <div className="muted">Order: #7421</div>
+          </div>
+
+          <div
+            ref={chatRef}
+            className="chat-body"
+            role="log"
+            aria-label="Chat transcript"
+          >
+            {messages.map((m, i) => (
+              <div
+                key={i}
+                className={`msg ${m.who === "you" ? "you" : "them"}`}
+              >
+                <div className={`avatar ${m.who === "you" ? "" : "them"}`}>
+                  {m.who === "you" ? "YOU" : "ES"}
+                </div>
+                <div>
+                  <div className="bubble">{m.text}</div>
+                  <div className="meta">
+                    {m.who === "you" ? "You" : "Emilia"}
+                  </div>
+                </div>
+              </div>
+            ))}
+
+            {typing && (
+              <div className="msg them" data-typing="1">
+                <div className="avatar them">ES</div>
+                <div className="typing">
+                  <span>Emilia is typing</span>{" "}
+                  <span className="dots">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                  </span>
+                </div>
+              </div>
+            )}
+
+            {done && (
+              <div
+                className="meta"
+                style={{ alignSelf: "center", margin: "8px auto 12px" }}
+              >
+                Conversation complete.
+              </div>
+            )}
+          </div>
+
+          <div className="composer">
+            <div className="input">
+              <textarea
+                ref={textareaRef}
+                readOnly
+                aria-label="Message composer (auto-typing)"
+                value={composerText}
+              />
+            </div>
+            <button className="send" onClick={onSend} disabled={!awaitingSend}>
+              Send
+            </button>
+          </div>
+        </section>
+      </main>
+    </div>
+  );
 }
