@@ -168,10 +168,9 @@ export default function Console({ newGame }: ConsoleProps): JSX.Element {
       }
       function renderCursor() {
         // rewrite current line: remove any existing cursor char
-        const txt = screen.textContent.replace(/▌$/, "");
-        screen.textContent = txt;
-        if (promptActive) {
-          print(cursorVisible ? "▌" : " ");
+        screen.textContent = screen.textContent.replace(/▌$/, "");
+        if (promptActive && cursorVisible) {
+          print("▌");
         }
       }
 
