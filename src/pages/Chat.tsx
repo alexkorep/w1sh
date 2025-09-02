@@ -72,7 +72,7 @@ export default function Chat({ onComplete }: ChatProps): JSX.Element {
       who: "you",
       text: "Hey! Quick question about the W1-SH - is its CPU 8088-compatible? Would it run DOS?",
     },
-    { who: "them", text: "I'm not sure, sorry. It was my dad's." },
+    { who: "them", text: "I'm not sure, sorry. It is my dad's." },
     { who: "you", text: "Could you ask him?" },
     {
       who: "them",
@@ -80,11 +80,15 @@ export default function Chat({ onComplete }: ChatProps): JSX.Element {
     },
     {
       who: "you",
-      text: "Oh no… I'm really sorry. And the price is still $50?",
+      text: "Oh no... I'm really sorry.",
+    },
+    {
+      who: "you",
+      text: "And the price is still $50?",
     },
     {
       who: "them",
-      text: "Yeah — fifty. Basically the price of a Starbucks coffee these days.",
+      text: "Yeah, fifty. Basically the price of a Starbucks coffee these days.",
     },
     { who: "you", text: "Alright, I'll take it." },
   ];
