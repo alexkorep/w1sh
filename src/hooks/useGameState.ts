@@ -7,6 +7,7 @@ interface GameState {
 }
 
 const STORAGE_KEY = "gameState";
+const INITIAL_STATE: GameState = { page: "ad" };
 
 function loadState(): GameState {
   try {
@@ -18,7 +19,7 @@ function loadState(): GameState {
   } catch {
     // ignore parsing errors and fall back to default
   }
-  return { page: "ad" };
+  return INITIAL_STATE;
 }
 
 export default function useGameState() {
@@ -36,5 +37,14 @@ export default function useGameState() {
 
   const onChatComplete = (): void => setPage("console");
 
-  return { page: state.page, setPage, onChatComplete };
+  const resetGame = (): void => {
+    try {
+      localStorage.removeItem(STORAGE_KEY);
+    } catch {
+      // ignore remove errors
+    }
+    setState(INITIAL_STATE);
+  };
+
+  return { page: state.page, setPage, onChatComplete, resetGame };
 }
