@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 
-export type Page = "chat" | "console";
+export type Page = "ad" | "chat" | "console";
 
 interface GameState {
   page: Page;
@@ -18,7 +18,7 @@ function loadState(): GameState {
   } catch {
     // ignore parsing errors and fall back to default
   }
-  return { page: "chat" };
+  return { page: "ad" };
 }
 
 export default function useGameState() {
