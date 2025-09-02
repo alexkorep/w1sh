@@ -161,7 +161,7 @@ export default function AdPage({ onMessageSeller }: { onMessageSeller: () => voi
         </section>
 
         <footer>
-          <div>© <span className="tiny">2025</span> BayLike — All rights reserved</div>
+          <div>© <span className="tiny">2030</span> BayLike — All rights reserved</div>
         </footer>
       </main>
     </div>
