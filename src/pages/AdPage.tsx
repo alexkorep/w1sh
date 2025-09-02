@@ -103,7 +103,7 @@ export default function AdPage({ onMessageSeller }: { onMessageSeller: () => voi
           {/* LEFT: media */}
           <article className="card media">
             <img
-              src="/images/w1sh-ad2.png"
+              src={`${import.meta.env.BASE_URL}images/w1sh-ad2.png`}
               alt="W1-SH handheld device"
               style={{ width: "100%", display: "block" }}
             />
