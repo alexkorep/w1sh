@@ -43,10 +43,6 @@ export default function Arrival({ onComplete }: ArrivalProps): JSX.Element {
   .arrival-text.fade {
     opacity: 0;
   }
-  .arrival-image {
-    margin-top: 20px;
-    max-width: 80%;
-  }
   `;
 
   return (
@@ -59,11 +55,6 @@ export default function Arrival({ onComplete }: ArrivalProps): JSX.Element {
       >
         3 to 5 days later. Your package arrives.
       </div>
-      <img
-        src={`${import.meta.env.BASE_URL}images/arrival-device.jpg`}
-        alt="Delivered device"
-        className="arrival-image"
-      />
     </div>
   );
 }
