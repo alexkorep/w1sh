@@ -1,4 +1,4 @@
-export default function AdPage({ onMessageSeller }: { onMessageSeller: () => void }): JSX.Element {
+export default function AdPage({ onMessageSeller, onBuyNow }: { onMessageSeller: () => void; onBuyNow: () => void }): JSX.Element {
   const css = `
     :root{
       /* Color scheme inspired by the screenshot */
@@ -123,7 +123,7 @@ export default function AdPage({ onMessageSeller }: { onMessageSeller: () => voi
               Vintage handheld computer <strong>W1‑SH</strong> from the late 1990s. Includes <strong>2×AA batteries</strong>. Screen powers on and the device should work. No manual available; seller has limited technical details.
             </p>
             <div className="cta">
-              <button className="btn primary">Buy Now</button>
+              <button className="btn primary" onClick={onBuyNow}>Buy Now</button>
               <button className="btn ghost" onClick={onMessageSeller}>Message Seller</button>
             </div>
 
