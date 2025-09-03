@@ -13,7 +13,7 @@ function App() {
   return (
     <div className="app-container">
       {page === "ad" ? (
-        <AdPage onMessageSeller={() => setPage("chat")} />
+        <AdPage onMessageSeller={() => setPage("chat")} onBuyNow={() => setPage("arrival")} />
       ) : page === "chat" ? (
         <Chat onComplete={onChatComplete} />
       ) : page === "arrival" ? (
