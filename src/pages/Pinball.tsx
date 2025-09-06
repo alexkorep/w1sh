@@ -65,6 +65,17 @@ html,
         right: 10px;
         pointer-events: auto;
         cursor: pointer;
+        background: #22c55e;
+        color: white;
+        border: none;
+        border-radius: 6px;
+        padding: 10px 20px;
+        font-weight: bold;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.12);
+        transition: background 0.2s;
+      }
+      #exit-btn:hover {
+        background: #16a34a;
       }
   `;
 
