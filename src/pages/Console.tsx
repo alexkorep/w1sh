@@ -767,12 +767,19 @@ export default function Console({ newGame }: ConsoleProps): JSX.Element {
   .kb{
     flex: 1 1 50%; min-height:38vh; margin:0 8px 10px; display:flex; flex-direction:column; gap:8px;
   }
-  .bar{ display:flex; flex-wrap:wrap; gap:8px; justify-content:center; }
+  .bar{
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 8px;
+    justify-content: center;
+  }
   .chip{
     background: linear-gradient(180deg, #103818, #0e2a15); color:var(--btn-text);
-    border:1px solid #0b2a14; border-bottom-color:#071c0d; border-radius:14px; padding:8px 12px; font-weight:600; letter-spacing:.6px;
+    border:1px solid #0b2a14; border-bottom-color:#071c0d; border-radius:14px; padding:8px 0; /* Adjusted padding for uniform height */
+    font-weight:600; letter-spacing:.6px;
     box-shadow: 0 3px 0 #061a0c, 0 0 0 2px #031006 inset; text-transform:uppercase; user-select:none;
     touch-action: manipulation; -webkit-tap-highlight-color: transparent; cursor:pointer;
+    text-align: center; /* Center text */
   }
   .chip:active{ transform: translateY(1px); box-shadow: 0 2px 0 #061a0c, 0 0 0 2px #031006 inset; }
 
@@ -817,28 +824,34 @@ export default function Console({ newGame }: ConsoleProps): JSX.Element {
         <div className="kb" id="kb">
           <div className="bar" id="cmdbar">
             <button className="chip" data-cmd="DIR">
-              DIR
+              F1
             </button>
             <button className="chip" data-cmd="CLS">
-              CLS
+              F2
             </button>
             <button className="chip" data-cmd="CD ..">
-              CD ..
+              F3
             </button>
             <button className="chip" data-cmd="TYPE README.TXT">
-              TYPE README.TXT
+              F4
             </button>
             <button className="chip" data-cmd="HELP">
-              HELP
+              F5
             </button>
             <button className="chip" data-cmd="RUN DEMO">
-              RUN DEMO
+              F6
             </button>
             <button className="chip" data-cmd="BEEP">
-              BEEP
+              F7
             </button>
             <button className="chip" data-cmd="REBOOT">
-              REBOOT
+              F8
+            </button>
+            <button className="chip" data-cmd="F9">
+              F9
+            </button>
+            <button className="chip" data-cmd="F10">
+              F10
             </button>
           </div>
           <div className="rows">
