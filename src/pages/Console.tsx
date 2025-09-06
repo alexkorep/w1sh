@@ -414,18 +414,16 @@ export default function Console({ newGame }: ConsoleProps): JSX.Element {
       }
 
       // ====== NEW: Rune keyboard ======
-      const duoLayers = {
-        letters: [
-          ["QW", "ER", "TY", "UI", "OP"],
-          ["AS", "DF", "GH", "JK", "L:"],
-          ["ZX", "CV", "BN", "M.", "/-"],
-        ],
-        symbols: [
-          ["12", "34", "56", "78", "90"],
-          ["-\\", ":.", ",;", "()", "[]"],
-          ["'\"", "+=", "/*", "/?", "&_"],
-        ],
-      };
+      const duoLetters = [
+        ["QW", "ER", "TY", "UI", "OP"],
+        ["AS", "DF", "GH", "JK", "L:"],
+        ["ZX", "CV", "BN", "M.", "/-"],
+      ];
+      const duoSymbols = [
+        ["12", "34", "56", "78", "90"],
+        ["-\\", ":.", ",;", "()", "[]"],
+        ["'\"", "+=", "/*", "/?", "&_"],
+      ];
       let layer: "letters" | "symbols" = "letters";
       let shift = false;
 
@@ -435,7 +433,11 @@ export default function Console({ newGame }: ConsoleProps): JSX.Element {
         const modeBtn = kb.querySelector(
           '[data-key="MODE"]'
         ) as HTMLButtonElement;
-        if (modeBtn) modeBtn.textContent = layer === "letters" ? "123" : "ABC";
+        if (modeBtn) modeBtn.classList.toggle("on", layer === "symbols");
+        const shiftBtn = kb.querySelector(
+          '[data-key="SHIFT"]'
+        ) as HTMLButtonElement;
+        if (shiftBtn) shiftBtn.classList.toggle("on", shift);
       }
 
       function makeCtrlKey(code: string, label: string) {
@@ -443,13 +445,19 @@ export default function Console({ newGame }: ConsoleProps): JSX.Element {
         b.className = "key tiny ctrl";
         b.dataset.key = code;
         b.textContent = label;
+        if (code === "MODE") {
+          const led = document.createElement("span");
+          led.className = "led";
+          b.appendChild(led);
+        }
         return b;
       }
-      function makeDuo(pair: string) {
+      function makeDuo(letters: string, symbols: string) {
         const b = document.createElement("button");
         b.className = "key duo";
-        b.dataset.pair = pair;
-        b.innerHTML = `<span class="pair"><span class="top">${pair[0]}</span><span class="mid"></span><span class="bottom">${pair[1]}</span></span>`;
+        b.dataset.letters = letters;
+        b.dataset.symbols = symbols;
+        b.innerHTML = `<span class="pair"><span class="cell lt">${letters[0]}</span><span class="cell rt">${symbols[0]}</span><span class="cell lb">${letters[1]}</span><span class="cell rb">${symbols[1]}</span></span>`;
         return b;
       }
 
@@ -464,10 +472,13 @@ export default function Console({ newGame }: ConsoleProps): JSX.Element {
         clear(r1);
         clear(r2);
         clear(r3);
-        const L = duoLayers[layer];
-        for (const p of L[0]) r1.appendChild(makeDuo(p));
-        for (const p of L[1]) r2.appendChild(makeDuo(p));
-        for (const p of L[2]) r3.appendChild(makeDuo(p));
+        for (let row = 0; row < 3; row++) {
+          for (let col = 0; col < 5; col++) {
+            const letters = duoLetters[row][col];
+            const symbols = duoSymbols[row][col];
+            [r1, r2, r3][row].appendChild(makeDuo(letters, symbols));
+          }
+        }
       }
 
       function buildKeyboard() {
@@ -481,7 +492,7 @@ export default function Console({ newGame }: ConsoleProps): JSX.Element {
         r0.appendChild(makeCtrlKey("BKSP", "BKSP"));
         r0.appendChild(makeCtrlKey("UP", "H↑"));
         r0.appendChild(makeCtrlKey("DN", "H↓"));
-        r0.appendChild(makeCtrlKey("MODE", "123")); // toggles ABC/123
+        r0.appendChild(makeCtrlKey("MODE", "123"));
 
         renderAlphaRows();
 
@@ -498,6 +509,11 @@ export default function Console({ newGame }: ConsoleProps): JSX.Element {
             (code === "SPACE" ? "xwide" : code === "SHIFT" ? "wide" : "");
           b.textContent = label;
           b.dataset.key = code;
+          if (code === "SHIFT") {
+            const led = document.createElement("span");
+            led.className = "led";
+            b.appendChild(led);
+          }
           r4.appendChild(b);
         }
         setKbState();
@@ -535,13 +551,13 @@ export default function Console({ newGame }: ConsoleProps): JSX.Element {
             break;
           case "MODE":
             layer = layer === "letters" ? "symbols" : "letters";
-            renderAlphaRows();
             setKbState();
             break;
           default: /* noop */
         }
       }
-      function pressDuo(pair) {
+      function pressDuo(btn: HTMLElement) {
+        const pair = layer === "letters" ? btn.dataset.letters : btn.dataset.symbols;
         const ch = shift ? pair[1] : pair[0];
         pressKey(ch);
       }
@@ -605,9 +621,9 @@ export default function Console({ newGame }: ConsoleProps): JSX.Element {
       kb.addEventListener("click", (e) => {
         const b = (e.target as HTMLElement).closest(".key") as HTMLElement;
         if (!b) return;
-        const pair = b.dataset.pair;
-        if (pair) {
-          pressDuo(pair);
+        const letters = b.dataset.letters;
+        if (letters) {
+          pressDuo(b);
           return;
         }
         const k = b.dataset.key;
@@ -782,6 +798,7 @@ export default function Console({ newGame }: ConsoleProps): JSX.Element {
   .rows{ display:grid; grid-template-rows: repeat(5, 1fr); gap:8px; }
   .row{ display:grid; grid-template-columns:repeat(5,1fr); gap:6px; }
   .key{
+    position:relative;
     background:linear-gradient(180deg,#121612,#0a0e0a); color:#d8ffe8; border:1px solid #0e120f; border-bottom-color:#050806; border-radius:10px;
     font-size:clamp(14px, 2.6vmin, 18px);
     box-shadow:0 3.5px 0 #070b08, 0 0 0 2px #050805 inset; text-align:center; user-select:none;
@@ -793,14 +810,27 @@ export default function Console({ newGame }: ConsoleProps): JSX.Element {
   .key.tiny{ font-size:clamp(12px, 2.2vmin, 16px); padding:10px 6px; }
 
   .key.duo{ display:grid; place-items:center; padding:10px 6px; }
-  .key.duo .pair{ display:grid; grid-template-rows:auto 2px auto; align-items:center; gap:2px; }
-  .key.duo .mid{ width:18px; height:2px; justify-self:center; background:rgba(77,209,122,.25); border-radius:2px; }
-  .key.duo .top{ font-weight:700; letter-spacing:.6px; opacity:1; }
-  .key.duo .bottom{ font-weight:600; letter-spacing:.6px; opacity:.35; }
+  .key.duo .pair{
+    position:relative;
+    display:grid; grid-template-columns:1fr 1fr; grid-template-rows:1fr 1fr; align-items:center;
+  }
+  .key.duo .pair::before,
+  .key.duo .pair::after{
+    content:""; position:absolute; background:rgba(77,209,122,.25); border-radius:2px;
+  }
+  .key.duo .pair::before{ left:0; right:0; top:50%; height:2px; transform:translateY(-1px); }
+  .key.duo .pair::after{ top:0; bottom:0; left:50%; width:2px; transform:translateX(-1px); }
+  .key.duo .cell{ font-weight:600; letter-spacing:.6px; opacity:.25; }
+  .kb[data-layer="letters"]:not(.shift-on) .key.duo .cell.lt,
+  .kb[data-layer="letters"].shift-on .key.duo .cell.lb,
+  .kb[data-layer="symbols"]:not(.shift-on) .key.duo .cell.rt,
+  .kb[data-layer="symbols"].shift-on .key.duo .cell.rb{ opacity:1; font-weight:700; }
 
-  /* SHIFT highlight flips emphasis */
-  .kb.shift-on .key.duo .top{ opacity:.35; }
-  .kb.shift-on .key.duo .bottom{ opacity:1; }
+  .key .led{
+    position:absolute; top:4px; right:4px; width:6px; height:6px; border-radius:50%;
+    background:#ffd400; box-shadow:0 0 4px rgba(255,212,0,.6); opacity:0;
+  }
+  .key.on .led{ opacity:1; }
 
   /* Make sure everything fits on small phones */
   @media (max-width: 420px){
