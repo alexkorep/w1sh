@@ -1,5 +1,5 @@
 // @ts-nocheck
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { Page } from "../hooks/useGameState";
 import ConsoleScreen from "../components/ConsoleScreen";
 
@@ -13,16 +13,25 @@ export default function Console({
   runGame,
 }: ConsoleProps): JSX.Element {
   const booted = useRef(false);
+  const screenRef = useRef<HTMLPreElement>(null);
+  const crtInnerRef = useRef<HTMLDivElement>(null);
+  const kbRef = useRef<HTMLDivElement>(null);
+  const cmdBarRef = useRef<HTMLDivElement>(null);
+  const keyboardRowsRef = useRef<HTMLDivElement>(null);
+  const [status, setStatus] = useState("POWER ◉");
+
   useEffect(() => {
     if (booted.current) return;
     booted.current = true;
 
     (function () {
       // ----- Utility -----
-      const screen = document.getElementById("screen");
-      const crtInner = document.querySelector(".crt .inner");
-      const statusEl = document.getElementById("status");
-      const kb = document.getElementById("kb");
+      const screen = screenRef.current;
+      const crtInner = crtInnerRef.current;
+      const kb = kbRef.current;
+      const cmdBar = cmdBarRef.current;
+      const rowsContainer = keyboardRowsRef.current;
+      if (!screen || !crtInner || !kb || !cmdBar || !rowsContainer) return;
 
       let __MUTE = false;
 
@@ -486,7 +495,6 @@ export default function Console({
       }
 
       function buildKeyboard() {
-        const rowsContainer = document.getElementById("keyboard-rows");
         clear(rowsContainer);
 
         UNIFIED_KEY_LAYOUT.forEach((rowKeys) => {
@@ -610,7 +618,7 @@ export default function Console({
       }
 
       // Command chips
-      document.getElementById("cmdbar").addEventListener("click", (e) => {
+      cmdBar.addEventListener("click", (e) => {
         const b = (e.target as HTMLElement).closest(
           "[data-cmd]"
         ) as HTMLElement;
@@ -704,7 +712,7 @@ export default function Console({
       let on = true;
       setInterval(() => {
         on = !on;
-        statusEl.textContent = `POWER ${on ? "◉" : "○"}`;
+        setStatus(`POWER ${on ? "◉" : "○"}`);
       }, 1200);
 
       boot(false);
@@ -839,8 +847,8 @@ export default function Console({
       <style>{css}</style>
       <div className="wrap">
         <div className="crt" id="crt">
-          <div className="inner">
-            <ConsoleScreen />
+          <div className="inner" ref={crtInnerRef}>
+            <ConsoleScreen ref={screenRef} />
           </div>
           <div className="function-keys">
             <span>
@@ -861,13 +869,11 @@ export default function Console({
           </div>
           <div className="glass"></div>
           <div className="vignette"></div>
-          <div className="status" id="status">
-            POWER ◉
-          </div>
+          <div className="status">{status}</div>
         </div>
 
-        <div className="kb" id="kb">
-          <div className="bar" id="cmdbar">
+        <div className="kb" ref={kbRef}>
+          <div className="bar" ref={cmdBarRef}>
             <button className="chip" data-cmd="DIR">
               F1
             </button>
@@ -885,9 +891,7 @@ export default function Console({
             </button>
           </div>
 
-          <div className="rows" id="keyboard-rows">
-            {/* Keyboard rows will be dynamically generated here */}
-          </div>
+          <div className="rows" ref={keyboardRowsRef}></div>
         </div>
       </div>
     </>

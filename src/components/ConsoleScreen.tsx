@@ -1,3 +1,7 @@
-export default function ConsoleScreen(): JSX.Element {
-  return <pre id="screen"></pre>;
-}
+import { forwardRef } from "react";
+
+const ConsoleScreen = forwardRef<HTMLPreElement>((_, ref) => {
+  return <pre ref={ref}></pre>;
+});
+
+export default ConsoleScreen;
