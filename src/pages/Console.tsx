@@ -477,7 +477,6 @@ export default function Console({
         if (symKey) {
           symKey.classList.toggle("active", sym);
           const label = symKey.querySelector(".char-main");
-          if (label) label.textContent = sym ? "ABC" : "123";
         }
       }
 
