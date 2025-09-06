@@ -1,11 +1,13 @@
 // @ts-nocheck
-import { useEffect } from "react";
+import { useEffect, useRef, useState } from "react";
 import useGameState from "../hooks/useGameState";
 
 import type { Page } from "../hooks/useGameState";
 
 export default function Pinball({ setPage }: { setPage: (page: Page) => void }): JSX.Element {
   const handleExit = () => setPage("console");
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const [score, setScore] = useState(0);
   const css = `
 html,
       body {
@@ -82,7 +84,8 @@ html,
 
   useEffect(() => {
 (() => {
-        const canvas = document.getElementById("c");
+        const canvas = canvasRef.current;
+        if (!canvas) return;
         const ctx = canvas.getContext("2d");
 
         // ----- World/state MUST be declared before resize()/setupWorld is called -----
@@ -99,8 +102,7 @@ html,
         let ball,
           walls = [],
           bumpers = [],
-          flippers = [],
-          score = 0;
+          flippers = [];
         // Track bumper vertical range for height-based scoring
         let bumperYMin = Infinity,
           bumperYMax = -Infinity;
@@ -207,8 +209,7 @@ html,
                 const base = bumperScoreForRadius(b.r);
                 const mult = bumperHeightMultiplier(b.y);
                 const points = Math.max(1, Math.round(base * mult));
-                score += points;
-                updateScore();
+                setScore((s) => s + points);
                 b.pulse = 1;
                 spawnSparks(this.x, this.y, 10);
                 spawnScoreDigits(b.x, b.y - b.r * 0.25, points);
@@ -223,8 +224,7 @@ html,
             this.y = ballInitY;
             this.vx = 0;
             this.vy = 50;
-            score = Math.max(0, score - 50);
-            updateScore();
+            setScore((s) => Math.max(0, s - 50));
           }
           draw() {
             ctx.globalAlpha = 0.35;
@@ -488,10 +488,6 @@ html,
           ctx.globalAlpha = 1;
         }
 
-        function updateScore() {
-          document.getElementById("score").textContent = "Score: " + score;
-        }
-
         // --------- Visual shake (camera) ---------
         function addShake(intensity = 6, duration = 0.12) {
           // Keep the stronger/longer shake if overlapping
@@ -518,8 +514,7 @@ html,
           walls = [];
           bumpers = [];
           flippers = [];
-          score = 0;
-          updateScore();
+          setScore(0);
 
           // Reset bumper height range before repopulating
           bumperYMin = Infinity;
@@ -838,13 +833,13 @@ html,
   return (
     <div>
       <style>{css}</style>
-      <canvas id="c"></canvas>
+      <canvas id="c" ref={canvasRef}></canvas>
       <button id="exit-btn" className="panel" onClick={handleExit}>
         Exit
       </button>
       <div id="ui">
-      <div className="panel" id="score">Score: 0</div>
-      <div className="panel" id="balls">Balls: ∞</div>
+        <div className="panel" id="score">Score: {score}</div>
+        <div className="panel" id="balls">Balls: ∞</div>
       </div>
       <div id="hint">Tap left/right to flip • Higher bumpers pay up to 1000x</div>
     </div>
