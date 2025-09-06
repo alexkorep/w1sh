@@ -406,7 +406,7 @@ export default function Console({
         println(" REBOOT            reboot the simulated PC");
       }
 
-      // ====== NEW: Full QWERTY Keyboard with static keys ======
+      // ====== Full QWERTY Keyboard with static keys ======
       let shift = false; // one-shot modifier
       let sym = false; // sticky modifier (for symbol page)
 
@@ -784,7 +784,6 @@ export default function Console({
   .key .char-main {
     font-size: clamp(16px, 3.5vmin, 22px);
     font-weight: 600;
-    transition: opacity .2s ease;
   }
   .key .char-sym {
     position: absolute;
@@ -793,7 +792,6 @@ export default function Console({
     font-size: clamp(11px, 2vmin, 14px);
     color: var(--phosphor-dim);
     opacity: 0.7;
-    transition: opacity .2s ease, color .2s ease, transform .2s ease;
   }
   .key.ctrl .char-main {
     font-size: clamp(11px, 2.5vmin, 14px);
@@ -804,19 +802,12 @@ export default function Console({
   .key.ctrl { background:linear-gradient(180deg, #181c18, #101410); }
   .key.empty { opacity: 0; pointer-events: none; }
 
-  /* Active states for SHIFT/SYM */
+  /* Active states for SHIFT/SYM keys ONLY */
   .key.ctrl.active {
       background: linear-gradient(180deg, #203b28, #15291b);
       color: #fff;
   }
-  .kb.shift-on .key .char-main { text-transform: uppercase; }
-  .kb.sym-on .key .char-main { opacity: 0.25; }
-  .kb.sym-on .key .char-sym {
-      opacity: 1;
-      color: var(--phosphor);
-      transform: scale(1.1) translate(-2px, 2px);
-  }
-
+  
   /* LED styling */
   .key .led{
     display:none; /* Hide by default, rely on active class */
