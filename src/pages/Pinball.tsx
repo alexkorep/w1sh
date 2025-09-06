@@ -2,8 +2,9 @@
 import { useEffect } from "react";
 import useGameState from "../hooks/useGameState";
 
-export default function Pinball(): JSX.Element {
-  const { setPage } = useGameState();
+import type { Page } from "../hooks/useGameState";
+
+export default function Pinball({ setPage }: { setPage: (page: Page) => void }): JSX.Element {
   const handleExit = () => setPage("console");
   const css = `
 html,
