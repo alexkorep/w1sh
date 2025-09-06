@@ -7,9 +7,9 @@
   "description": "W1SH progressive web app",
   "icons": [
     {
-      "src": "images/w1sh-ad2.png",
+      "src": "images/w1sh-icon.jpeg",
       "sizes": "512x512",
-      "type": "image/png",
+      "type": "image/jpeg",
       "purpose": "any maskable"
     }
   ]
