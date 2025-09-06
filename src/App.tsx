@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import "./App.css";
 import AdPage from "./pages/AdPage";
 import Chat from "./pages/Chat";
@@ -6,11 +7,13 @@ import TitleScreen from "./pages/TitleScreen";
 import Elite from "./pages/Elite";
 import Pinball from "./pages/Pinball";
 import Console from "./pages/Console";
+import Home from "./pages/Home";
 
 import useGameState from "./hooks/useGameState";
 
 
 function App() {
+  const [showHome, setShowHome] = useState(true);
   const {
     page,
     setPage,
@@ -20,9 +23,31 @@ function App() {
     newGame,
   } = useGameState();
 
+  useEffect(() => {
+    const handleFullscreenChange = () => {
+      if (!document.fullscreenElement) {
+        setShowHome(true);
+      }
+    };
+    document.addEventListener("fullscreenchange", handleFullscreenChange);
+    return () =>
+      document.removeEventListener("fullscreenchange", handleFullscreenChange);
+  }, []);
+
+  const startNewGame = () => {
+    newGame();
+    setShowHome(false);
+  };
+
+  const continueGame = () => {
+    setShowHome(false);
+  };
+
   return (
     <div className="app-container">
-      {page === "ad" ? (
+      {showHome ? (
+        <Home onNewGame={startNewGame} onContinue={continueGame} />
+      ) : page === "ad" ? (
         <AdPage
           onMessageSeller={() => setPage("chat")}
           onBuyNow={() => setPage("arrival")}

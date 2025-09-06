@@ -1,4 +1,34 @@
-export default function Home(): JSX.Element {
+import type { MouseEvent } from "react";
+
+interface HomeProps {
+  onNewGame: () => void;
+  onContinue: () => void;
+}
+
+export default function Home({ onNewGame, onContinue }: HomeProps): JSX.Element {
+  const requestFullscreen = async (): Promise<void> => {
+    const el = document.documentElement;
+    if (el.requestFullscreen) {
+      try {
+        await el.requestFullscreen();
+      } catch {
+        // ignore fullscreen errors
+      }
+    }
+  };
+
+  const handleNewGame = async (e: MouseEvent): Promise<void> => {
+    e.preventDefault();
+    await requestFullscreen();
+    onNewGame();
+  };
+
+  const handleContinue = async (e: MouseEvent): Promise<void> => {
+    e.preventDefault();
+    await requestFullscreen();
+    onContinue();
+  };
+
   const css = `
   @import url('https://fonts.googleapis.com/css2?family=VT323&display=swap');
 
@@ -158,9 +188,19 @@ export default function Home(): JSX.Element {
       </h1>
       <nav>
         <ul className="menu">
-          <li className="menu-item"><a href="#">New Game</a></li>
-          <li className="menu-item"><a href="#">Continue</a></li>
-          <li className="menu-item"><a href="#">Options</a></li>
+          <li className="menu-item">
+            <a href="#" onClick={handleNewGame}>
+              New Game
+            </a>
+          </li>
+          <li className="menu-item">
+            <a href="#" onClick={handleContinue}>
+              Continue
+            </a>
+          </li>
+          <li className="menu-item">
+            <a href="#">Options</a>
+          </li>
         </ul>
       </nav>
     </div>
