@@ -7,7 +7,10 @@ interface ConsoleProps {
   runGame: (page: Page) => void;
 }
 
-export default function Console({ newGame, runGame }: ConsoleProps): JSX.Element {
+export default function Console({
+  newGame,
+  runGame,
+}: ConsoleProps): JSX.Element {
   const booted = useRef(false);
   useEffect(() => {
     if (booted.current) return;
@@ -947,7 +950,6 @@ export default function Console({ newGame, runGame }: ConsoleProps): JSX.Element
           <div className="inner">
             <pre id="screen"></pre>
           </div>
-          {/* NEW: Function key status line */}
           <div className="function-keys">
             <span>
               <b className="f-num">1</b>DIR
@@ -959,25 +961,10 @@ export default function Console({ newGame, runGame }: ConsoleProps): JSX.Element
               <b className="f-num">3</b>CD..
             </span>
             <span>
-              <b className="f-num">4</b>TYPE
+              <b className="f-num">4</b>README
             </span>
             <span>
               <b className="f-num">5</b>HELP
-            </span>
-            <span>
-              <b className="f-num">6</b>RUN
-            </span>
-            <span>
-              <b className="f-num">7</b>BEEP
-            </span>
-            <span>
-              <b className="f-num">8</b>REBOOT
-            </span>
-            <span>
-              <b className="f-num">9</b>
-            </span>
-            <span>
-              <b className="f-num">10</b>
             </span>
           </div>
           <div className="glass"></div>
@@ -1003,21 +990,6 @@ export default function Console({ newGame, runGame }: ConsoleProps): JSX.Element
             </button>
             <button className="chip" data-cmd="HELP">
               F5
-            </button>
-            <button className="chip" data-cmd="RUN DEMO">
-              F6
-            </button>
-            <button className="chip" data-cmd="BEEP">
-              F7
-            </button>
-            <button className="chip" data-cmd="REBOOT">
-              F8
-            </button>
-            <button className="chip" data-cmd="F9">
-              F9
-            </button>
-            <button className="chip" data-cmd="F10">
-              F10
             </button>
           </div>
 
