@@ -1,11 +1,13 @@
 // @ts-nocheck
 import { useEffect, useRef } from "react";
+import type { Page } from "../hooks/useGameState";
 
 interface ConsoleProps {
   newGame: () => void;
+  runGame: (page: Page) => void;
 }
 
-export default function Console({ newGame }: ConsoleProps): JSX.Element {
+export default function Console({ newGame, runGame }: ConsoleProps): JSX.Element {
   const booted = useRef(false);
   useEffect(() => {
     if (booted.current) return;
@@ -255,6 +257,12 @@ export default function Console({ newGame }: ConsoleProps): JSX.Element {
           case "RUN":
             runCmd(parts.join(" "));
             break;
+          case "ELITE":
+            runGame("elite");
+            return;
+          case "PINBALL":
+            runGame("pinball");
+            return;
           case "BEEP":
             initAudio();
             beep(880, 120);
@@ -388,6 +396,8 @@ export default function Console({ newGame }: ConsoleProps): JSX.Element {
         println(" CLS               clear screen");
         println(" VER | DATE | TIME | MEM");
         println(" RUN <NAME>        run a program (e.g., RUN DEMO)");
+        println(" ELITE             play Elite demo");
+        println(" PINBALL           play pinball game");
         println(" BEEP              beep the PC speaker");
         println(" TESTS             run built-in self tests");
         println(" REBOOT            reboot the simulated PC");
