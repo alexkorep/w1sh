@@ -795,12 +795,43 @@ export default function Console({ newGame }: ConsoleProps): JSX.Element {
     background:radial-gradient(120% 80% at 50% 50%, #001c00 0%, #000b00 75%);
   }
   .crt .inner{
-    position:absolute; inset:14px; border-radius:12px; background: var(--screen-bg);
+    position:absolute; /* MODIFIED: was inset:14px */ top: 14px; left: 14px; right: 14px; bottom: 38px; border-radius:12px; background: var(--screen-bg);
     box-shadow:0 0 0 2px rgba(0,0,0,.65) inset, 0 0 80px rgba(0,255,130,.06) inset, 0 0 220px rgba(0,200,100,.05) inset;
     overflow:auto; -webkit-overflow-scrolling:touch; filter:saturate(90%) contrast(110%) brightness(95%);
   }
   pre#screen{ margin:0; padding:16px 18px 40px; color:var(--phosphor); font-size:clamp(12px, 2.6vmin, 18px); text-shadow:0 0 6px rgba(0,255,130,.35), 0 0 18px rgba(0,255,100,.12);
     white-space:pre-wrap; word-wrap:break-word; }
+
+  /* --- NEW: Function key status line --- */
+  .function-keys {
+    position: absolute;
+    bottom: 14px;
+    left: 14px;
+    right: 14px;
+    height: 24px;
+    background: #002a00;
+    color: var(--phosphor-dim);
+    display: flex;
+    align-items: center;
+    padding: 0 18px;
+    box-sizing: border-box;
+    font-family: inherit;
+    font-size: clamp(12px, 2.4vmin, 16px);
+    white-space: nowrap;
+    overflow: hidden;
+    user-select: none;
+  }
+  .function-keys span {
+      margin-right: 1.2em;
+  }
+  .function-keys .f-num {
+      background: var(--phosphor-dim);
+      color: #002a00;
+      padding: 0 4px;
+      margin-right: 4px;
+      font-weight: normal;
+  }
+  /* --- END NEW --- */
 
   .glass{ pointer-events:none; position:absolute; inset:0; border-radius:12px;
     background: linear-gradient(180deg, rgba(0,0,0,.15), rgba(0,0,0,.35)),
@@ -905,6 +936,39 @@ export default function Console({ newGame }: ConsoleProps): JSX.Element {
         <div className="crt" id="crt">
           <div className="inner">
             <pre id="screen"></pre>
+          </div>
+          {/* NEW: Function key status line */}
+          <div className="function-keys">
+            <span>
+              <b className="f-num">1</b>DIR
+            </span>
+            <span>
+              <b className="f-num">2</b>CLS
+            </span>
+            <span>
+              <b className="f-num">3</b>CD..
+            </span>
+            <span>
+              <b className="f-num">4</b>TYPE
+            </span>
+            <span>
+              <b className="f-num">5</b>HELP
+            </span>
+            <span>
+              <b className="f-num">6</b>RUN
+            </span>
+            <span>
+              <b className="f-num">7</b>BEEP
+            </span>
+            <span>
+              <b className="f-num">8</b>REBOOT
+            </span>
+            <span>
+              <b className="f-num">9</b>
+            </span>
+            <span>
+              <b className="f-num">10</b>
+            </span>
           </div>
           <div className="glass"></div>
           <div className="vignette"></div>
