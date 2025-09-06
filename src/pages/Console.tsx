@@ -400,7 +400,7 @@ export default function Console({ newGame }: ConsoleProps): JSX.Element {
       // Each key shows: [L1 | D1] / [L2 | D2]
       // Selection: SHIFT => pick lower row, 123 => pick digit column.
       const quadRows = [
-        // Row 1
+        // Row 1 — keep digits
         [
           { letters: "QW", digits: "12" },
           { letters: "ER", digits: "34" },
@@ -408,21 +408,21 @@ export default function Console({ newGame }: ConsoleProps): JSX.Element {
           { letters: "UI", digits: "78" },
           { letters: "OP", digits: "90" },
         ],
-        // Row 2
+        // Row 2 — symbols
         [
-          { letters: "AS", digits: "12" },
-          { letters: "DF", digits: "34" },
-          { letters: "GH", digits: "56" },
-          { letters: "JK", digits: "78" },
-          { letters: "L:", digits: "90" },
+          { letters: "AS", digits: "!@" },
+          { letters: "DF", digits: "#$" },
+          { letters: "GH", digits: "%^" },
+          { letters: "JK", digits: "&*" },
+          { letters: "L:", digits: "()" },
         ],
-        // Row 3
+        // Row 3 — more symbols
         [
-          { letters: "ZX", digits: "12" },
-          { letters: "CV", digits: "34" },
-          { letters: "BN", digits: "56" },
-          { letters: "M.", digits: "78" },
-          { letters: "/-", digits: "90" },
+          { letters: "ZX", digits: "`~" }, // SHIFT → ~
+          { letters: "CV", digits: "-=" }, // SHIFT → =
+          { letters: "BN", digits: "[]" }, // SHIFT → ]
+          { letters: "M.", digits: "{}" }, // SHIFT → }
+          { letters: "/-", digits: "\\|" }, // need double backslash in string
         ],
       ];
 
