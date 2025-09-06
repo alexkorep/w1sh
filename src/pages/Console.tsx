@@ -526,6 +526,11 @@ export default function Console({ newGame }: ConsoleProps): JSX.Element {
         initAudio();
         if (code.length === 1) {
           handleChar(code);
+          // Reset shift after typing a character
+          if (shift) {
+            shift = false;
+            setKbState();
+          }
           return;
         }
         switch (code) {
@@ -539,21 +544,51 @@ export default function Console({ newGame }: ConsoleProps): JSX.Element {
             break;
           case "SPACE":
             handleChar(" ");
+            // Reset shift after space
+            if (shift) {
+              shift = false;
+              setKbState();
+            }
             break;
           case "TAB":
             handleChar("    ");
+            // Reset shift after tab
+            if (shift) {
+              shift = false;
+              setKbState();
+            }
             break;
           case "ENTER":
             submit();
+            // Reset shift after enter
+            if (shift) {
+              shift = false;
+              setKbState();
+            }
             break;
           case "BKSP":
             backspace();
+            // Reset shift after backspace
+            if (shift) {
+              shift = false;
+              setKbState();
+            }
             break;
           case "UP":
             upHistory();
+            // Reset shift after history navigation
+            if (shift) {
+              shift = false;
+              setKbState();
+            }
             break;
           case "DN":
             downHistory();
+            // Reset shift after history navigation
+            if (shift) {
+              shift = false;
+              setKbState();
+            }
             break;
           default: /* noop */
         }
@@ -566,6 +601,7 @@ export default function Console({ newGame }: ConsoleProps): JSX.Element {
         const colIsDigit = num; // left/right
         const ch = colIsDigit ? digits[rowIdx] : letters[rowIdx];
         pressKey(ch);
+        // Note: shift reset is handled in pressKey when a character is typed
       }
 
       // Command chips
