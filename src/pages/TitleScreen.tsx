@@ -6,14 +6,6 @@ interface TitleScreenProps {
 
 export default function TitleScreen({ onBoot }: TitleScreenProps): JSX.Element {
   const handleBoot = useCallback(async () => {
-    const el = document.documentElement;
-    if (el.requestFullscreen) {
-      try {
-        await el.requestFullscreen();
-      } catch {
-        // ignore fullscreen errors
-      }
-    }
     onBoot();
   }, [onBoot]);
 
