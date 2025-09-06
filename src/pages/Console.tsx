@@ -721,7 +721,7 @@ export default function Console({
   }
   html, body { height:100%; }
   body{
-    margin:0; background:#0c0f0c; color:#d9ffe6; font:14px/1.4 ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+    margin:0; background:#53524f; color:#d9ffe6; font:14px/1.4 ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
     display:flex; flex-direction:column; gap:8px;
   }
   .wrap{ display:flex; flex-direction:column; width:100%; height:100%; }
