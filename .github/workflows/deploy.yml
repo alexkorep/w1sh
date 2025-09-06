@@ -25,6 +25,8 @@ jobs:
           cache: yarn
       - run: corepack enable
       - run: yarn install --frozen-lockfile
+      - name: Update cache version in sw.js
+        run: sed -i "s/w1sh-cache-v1/w1sh-cache-$(echo $GITHUB_SHA | cut -c1-7)/" public/sw.js
       - run: yarn build
       - uses: actions/upload-pages-artifact@v3
         with:
