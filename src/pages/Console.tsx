@@ -1,6 +1,7 @@
 // @ts-nocheck
 import { useEffect, useRef } from "react";
 import type { Page } from "../hooks/useGameState";
+import ConsoleScreen from "../components/ConsoleScreen";
 
 interface ConsoleProps {
   newGame: () => void;
@@ -839,7 +840,7 @@ export default function Console({
       <div className="wrap">
         <div className="crt" id="crt">
           <div className="inner">
-            <pre id="screen"></pre>
+            <ConsoleScreen />
           </div>
           <div className="function-keys">
             <span>
