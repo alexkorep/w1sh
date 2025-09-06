@@ -1,5 +1,6 @@
 const CACHE_NAME = 'w1sh-cache-v1';
-const URLS_TO_CACHE = ['/'];
+const BASE_PATH = self.location.pathname.replace(/sw\.js$/, '');
+const URLS_TO_CACHE = [BASE_PATH];
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
