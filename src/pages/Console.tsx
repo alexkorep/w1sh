@@ -706,7 +706,6 @@ export default function Console({
         statusEl.textContent = `POWER ${on ? "◉" : "○"}`;
       }, 1200);
 
-      // Kick off
       boot(false);
     })();
   }, []);
