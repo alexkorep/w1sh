@@ -783,7 +783,7 @@ export default function Console({ newGame }: ConsoleProps): JSX.Element {
   .row{ display:grid; grid-template-columns:repeat(5,1fr); gap:6px; }
   .key{
     background:linear-gradient(180deg,#121612,#0a0e0a); color:#d8ffe8; border:1px solid #0e120f; border-bottom-color:#050806; border-radius:10px;
-    padding:14px 10px; font-size:clamp(14px, 2.6vmin, 18px);
+    font-size:clamp(14px, 2.6vmin, 18px);
     box-shadow:0 3.5px 0 #070b08, 0 0 0 2px #050805 inset; text-align:center; user-select:none;
     touch-action:manipulation; -webkit-tap-highlight-color:transparent; cursor:pointer;
   }
