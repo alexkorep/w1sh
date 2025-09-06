@@ -404,217 +404,209 @@ export default function Console({
         println(" BEEP              beep the PC speaker");
         println(" TESTS             run built-in self tests");
         println(" REBOOT            reboot the simulated PC");
-        println(
-          "\nTips: SHIFT chooses lower rune; 123 chooses digits. LEDs show active toggles."
-        );
       }
 
-      // ====== NEW: Quad-rune physical keyboard ======
-      // Each key shows: [L1 | D1] / [L2 | D2]
-      // Selection: SHIFT => pick lower row, 123 => pick digit column.
-      const quadRows = [
-        // Row 1 — keep digits
-        [
-          { letters: "QW", digits: "12" },
-          { letters: "ER", digits: "34" },
-          { letters: "TY", digits: "56" },
-          { letters: "UI", digits: "78" },
-          { letters: "OP", digits: "90" },
-        ],
-        // Row 2 — symbols
-        [
-          { letters: "AS", digits: "!@" },
-          { letters: "DF", digits: "#$" },
-          { letters: "GH", digits: "%^" },
-          { letters: "JK", digits: "&*" },
-          { letters: "L:", digits: "()" },
-        ],
-        // Row 3 — more symbols
-        [
-          { letters: "ZX", digits: "`~" }, // SHIFT → ~
-          { letters: "CV", digits: "-=" }, // SHIFT → =
-          { letters: "BN", digits: "[]" }, // SHIFT → ]
-          { letters: "M.", digits: "{}" }, // SHIFT → }
-          { letters: "/-", digits: "\\|" }, // need double backslash in string
-        ],
-      ];
+      // ====== NEW: Full QWERTY Keyboard ======
+      let shift = false; // one-shot modifier
+      let sym = false; // sticky modifier (for symbol page)
 
-      let shift = false; // lower row selector (sticky)
-      let num = false; // digit column selector (sticky)
+      const SPCR = { size: 0.5, empty: true }; // Spacer object for layout
+
+      const KEY_CONFIG = {
+        SHIFT: {
+          label: "⇧",
+          code: "SHIFT",
+          size: 1.5,
+          ctrl: true,
+          led: true,
+        },
+        BKSP: { label: "⌫", code: "BKSP", size: 1.5, ctrl: true },
+        SYM: { label: "123", code: "SYM", size: 1.5, ctrl: true, led: true },
+        ABC: { label: "ABC", code: "SYM", size: 1.5, ctrl: true, led: true },
+        SPACE: { label: "space", code: "SPACE", size: 5, ctrl: true },
+        ENTER: { label: "enter", code: "ENTER", size: 2.5, ctrl: true },
+        UP: { label: "▲", code: "UP", ctrl: true },
+        DN: { label: "▼", code: "DN", ctrl: true },
+        TAB: { label: "tab", code: "TAB", size: 1.5, ctrl: true },
+      };
+
+      const KEY_LAYOUTS = {
+        base: [
+          ["q", "w", "e", "r", "t", "y", "u", "i", "o", "p"],
+          [SPCR, "a", "s", "d", "f", "g", "h", "j", "k", "l", SPCR],
+          [
+            KEY_CONFIG.SHIFT,
+            "z",
+            "x",
+            "c",
+            "v",
+            "b",
+            "n",
+            "m",
+            KEY_CONFIG.BKSP,
+          ],
+          [
+            KEY_CONFIG.SYM,
+            KEY_CONFIG.UP,
+            KEY_CONFIG.DN,
+            KEY_CONFIG.SPACE,
+            KEY_CONFIG.ENTER,
+          ],
+        ],
+        shift: [
+          ["Q", "W", "E", "R", "T", "Y", "U", "I", "O", "P"],
+          [SPCR, "A", "S", "D", "F", "G", "H", "J", "K", "L", SPCR],
+          [
+            KEY_CONFIG.SHIFT,
+            "Z",
+            "X",
+            "C",
+            "V",
+            "B",
+            "N",
+            "M",
+            KEY_CONFIG.BKSP,
+          ],
+          [
+            KEY_CONFIG.SYM,
+            KEY_CONFIG.UP,
+            KEY_CONFIG.DN,
+            KEY_CONFIG.SPACE,
+            KEY_CONFIG.ENTER,
+          ],
+        ],
+        sym: [
+          ["1", "2", "3", "4", "5", "6", "7", "8", "9", "0"],
+          ["@", "#", "$", "_", "&", "-", "+", "(", ")", "/"],
+          [KEY_CONFIG.TAB, "*", '"', "'", ":", ";", "!", "?", KEY_CONFIG.BKSP],
+          [KEY_CONFIG.ABC, "`", "~", KEY_CONFIG.SPACE, KEY_CONFIG.ENTER],
+        ],
+      };
 
       function setKbState() {
         kb.classList.toggle("shift-on", shift);
-        kb.classList.toggle("num-on", num);
-      }
-
-      function makeCtrlKey(code: string, label: string, withLed = false) {
-        const b = document.createElement("button");
-        b.className = "key tiny ctrl";
-        b.dataset.key = code;
-        b.innerHTML = withLed
-          ? `<span class="label">${label}</span><span class="led" aria-hidden="true"></span>`
-          : `<span class="label">${label}</span>`;
-        return b;
-      }
-
-      function makeQuadCell(ch: string, pos: string) {
-        const s = document.createElement("span");
-        s.className = `cell ${pos}`;
-        s.textContent = ch;
-        return s;
-      }
-
-      function makeQuad(letters: string, digits: string) {
-        const b = document.createElement("button");
-        b.className = "key quad";
-        b.dataset.letters = letters; // e.g., "QW"
-        b.dataset.digits = digits; // e.g., "12"
-        // Build 2x2 grid
-        const box = document.createElement("div");
-        box.className = "quadbox";
-        box.appendChild(makeQuadCell(letters[0], "tl"));
-        box.appendChild(makeQuadCell(digits[0], "tr"));
-        box.appendChild(makeQuadCell(letters[1], "bl"));
-        box.appendChild(makeQuadCell(digits[1], "br"));
-        b.appendChild(box);
-        // Chrome: extra tap target nice glow
-        return b;
+        kb.classList.toggle("sym-on", sym);
+        const shiftKey = kb.querySelector('[data-key="SHIFT"]');
+        if (shiftKey) shiftKey.classList.toggle("active", shift);
+        const symKey = kb.querySelector('[data-key="SYM"]');
+        if (symKey) symKey.classList.toggle("active", sym);
       }
 
       function clear(el: HTMLElement) {
         while (el.firstChild) el.removeChild(el.firstChild);
       }
 
-      function renderAlphaRows() {
-        const r1 = document.getElementById("r1");
-        const r2 = document.getElementById("r2");
-        const r3 = document.getElementById("r3");
-        clear(r1);
-        clear(r2);
-        clear(r3);
-        for (const q of quadRows[0])
-          r1.appendChild(makeQuad(q.letters, q.digits));
-        for (const q of quadRows[1])
-          r2.appendChild(makeQuad(q.letters, q.digits));
-        for (const q of quadRows[2])
-          r3.appendChild(makeQuad(q.letters, q.digits));
+      function renderKeyboardLayout() {
+        const rowsContainer = document.getElementById("keyboard-rows");
+        clear(rowsContainer);
+
+        const mode = sym ? "sym" : shift ? "shift" : "base";
+        const layout = KEY_LAYOUTS[mode];
+
+        layout.forEach((rowKeys) => {
+          const rowEl = document.createElement("div");
+          rowEl.className = "row";
+          rowKeys.forEach((keyDef) => {
+            const b = document.createElement("button");
+            b.className = "key";
+
+            let label,
+              code,
+              size = 1,
+              isCtrl = false,
+              hasLed = false,
+              isEmpty = false;
+
+            if (typeof keyDef === "string") {
+              label = code = keyDef;
+            } else {
+              label = keyDef.label;
+              code = keyDef.code;
+              size = keyDef.size || 1;
+              isCtrl = keyDef.ctrl || false;
+              hasLed = keyDef.led || false;
+              isEmpty = keyDef.empty || false;
+            }
+
+            if (isEmpty) {
+              b.classList.add("empty");
+              b.disabled = true;
+            } else if (hasLed) {
+              b.innerHTML = `<span class="label">${label}</span><span class="led" aria-hidden="true"></span>`;
+            } else {
+              b.textContent = label;
+            }
+
+            b.dataset.key = code;
+            b.style.flexGrow = `${size}`;
+            b.style.flexBasis = "0";
+
+            if (isCtrl) b.classList.add("ctrl");
+
+            rowEl.appendChild(b);
+          });
+          rowsContainer.appendChild(rowEl);
+        });
+        setKbState();
       }
 
       function buildKeyboard() {
-        const r0 = document.getElementById("r0");
-        const r4 = document.getElementById("r4");
-        clear(r0);
-        clear(r4);
-
-        // Compact control strip (physical, labels never change)
-        r0.appendChild(makeCtrlKey("TAB", "TAB"));
-        r0.appendChild(makeCtrlKey("BKSP", "BKSP"));
-        r0.appendChild(makeCtrlKey("UP", "H↑"));
-        r0.appendChild(makeCtrlKey("DN", "H↓"));
-        r0.appendChild(makeCtrlKey("NUM", "123", true)); // LED
-
-        renderAlphaRows();
-
-        // Bottom row
-        const bottom = [
-          ["SHIFT", "SHIFT", true],
-          ["SPACE", "SPACE", false],
-          ["ENTER", "ENTER", false],
-        ] as any[];
-        for (const [code, label, withLed] of bottom) {
-          const b = makeCtrlKey(code, label, withLed);
-          b.className =
-            "key " +
-            (code === "SPACE"
-              ? "xwide ctrl"
-              : code === "SHIFT"
-              ? "wide ctrl"
-              : "ctrl");
-          r4.appendChild(b);
-        }
-        setKbState();
+        renderKeyboardLayout();
       }
 
       function pressKey(code) {
         initAudio();
-        if (code.length === 1) {
-          handleChar(code);
-          // Reset shift after typing a character
-          if (shift) {
-            shift = false;
-            setKbState();
-          }
-          return;
-        }
+        if (!code) return;
+
         switch (code) {
           case "SHIFT":
             shift = !shift;
-            setKbState();
+            if (shift && sym) sym = false;
+            renderKeyboardLayout();
             break;
-          case "NUM":
-            num = !num;
-            setKbState();
+          case "SYM":
+            sym = !sym;
+            if (sym && shift) shift = false;
+            renderKeyboardLayout();
             break;
           case "SPACE":
             handleChar(" ");
-            // Reset shift after space
             if (shift) {
               shift = false;
-              setKbState();
-            }
-            break;
-          case "TAB":
-            handleChar("    ");
-            // Reset shift after tab
-            if (shift) {
-              shift = false;
-              setKbState();
+              renderKeyboardLayout();
             }
             break;
           case "ENTER":
             submit();
-            // Reset shift after enter
             if (shift) {
               shift = false;
-              setKbState();
+              renderKeyboardLayout();
             }
             break;
           case "BKSP":
             backspace();
-            // Reset shift after backspace
+            break;
+          case "TAB":
+            handleChar("    "); // 4 spaces for tab
             if (shift) {
               shift = false;
-              setKbState();
+              renderKeyboardLayout();
             }
             break;
           case "UP":
             upHistory();
-            // Reset shift after history navigation
-            if (shift) {
-              shift = false;
-              setKbState();
-            }
             break;
           case "DN":
             downHistory();
-            // Reset shift after history navigation
+            break;
+          default: // It's a character key
+            handleChar(code);
             if (shift) {
               shift = false;
-              setKbState();
+              renderKeyboardLayout();
             }
             break;
-          default: /* noop */
         }
-      }
-
-      function pressQuad(btn: HTMLElement) {
-        const letters = btn.dataset.letters || "AA";
-        const digits = btn.dataset.digits || "00";
-        const rowIdx = shift ? 1 : 0; // top/bottom
-        const colIsDigit = num; // left/right
-        const ch = colIsDigit ? digits[rowIdx] : letters[rowIdx];
-        pressKey(ch);
-        // Note: shift reset is handled in pressKey when a character is typed
       }
 
       // Command chips
@@ -637,34 +629,27 @@ export default function Console({
       window.addEventListener(
         "keydown",
         (e) => {
+          if (e.metaKey || e.ctrlKey) return;
+
           if (e.key === "Backspace") {
             e.preventDefault();
             backspace();
-            return;
-          }
-          if (e.key === "Enter") {
+          } else if (e.key === "Enter") {
             e.preventDefault();
             submit();
-            return;
-          }
-          if (e.key === "ArrowUp") {
+          } else if (e.key === "ArrowUp") {
             e.preventDefault();
             upHistory();
-            return;
-          }
-          if (e.key === "ArrowDown") {
+          } else if (e.key === "ArrowDown") {
             e.preventDefault();
             downHistory();
-            return;
-          }
-          if (e.key === "Tab") {
+          } else if (e.key === "Tab") {
             e.preventDefault();
             handleChar("    ");
-            return;
-          }
-          if (e.key.length === 1) {
-            handleChar(e.key.toUpperCase());
-            return;
+          } else if (e.key.length === 1) {
+            e.preventDefault();
+            // Let physical shift key work, but map to our uppercase
+            handleChar(e.shiftKey ? e.key.toUpperCase() : e.key);
           }
         },
         { passive: false }
@@ -673,12 +658,7 @@ export default function Console({
       kb.addEventListener("click", (e) => {
         const el = (e.target as HTMLElement).closest(".key") as HTMLElement;
         if (!el) return;
-        if (el.classList.contains("quad")) {
-          pressQuad(el);
-          return;
-        }
-        const k = el.dataset.key;
-        if (k) pressKey(k);
+        pressKey(el.dataset.key);
       });
 
       buildKeyboard();
@@ -803,48 +783,25 @@ export default function Console({
 
   /* --- CRT Screen --- */
   .crt{
-    position:relative; flex: 1 1 50%; min-height:45vh; max-height:60vh; margin:8px; border-radius:20px; overflow:hidden;
+    position:relative; flex: 1 1 50%; min-height:40vh; max-height:60vh; margin:8px; border-radius:20px; overflow:hidden;
     border:8px solid var(--bezel); box-shadow:0 0 0 2px var(--bezel-edge) inset, 0 40px 80px rgba(0,0,0,.7), 0 12px 24px rgba(0,0,0,.8) inset;
     background:radial-gradient(120% 80% at 50% 50%, #001c00 0%, #000b00 75%);
   }
   .crt .inner{
-    position:absolute; /* MODIFIED: was inset:14px */ top: 14px; left: 14px; right: 14px; bottom: 38px; border-radius:12px; background: var(--screen-bg);
+    position:absolute; top: 14px; left: 14px; right: 14px; bottom: 38px; border-radius:12px; background: var(--screen-bg);
     box-shadow:0 0 0 2px rgba(0,0,0,.65) inset, 0 0 80px rgba(0,255,130,.06) inset, 0 0 220px rgba(0,200,100,.05) inset;
     overflow:auto; -webkit-overflow-scrolling:touch; filter:saturate(90%) contrast(110%) brightness(95%);
   }
   pre#screen{ margin:0; padding:16px 18px 40px; color:var(--phosphor); font-size:clamp(12px, 2.6vmin, 18px); text-shadow:0 0 6px rgba(0,255,130,.35), 0 0 18px rgba(0,255,100,.12);
     white-space:pre-wrap; word-wrap:break-word; }
 
-  /* --- NEW: Function key status line --- */
   .function-keys {
-    position: absolute;
-    bottom: 14px;
-    left: 14px;
-    right: 14px;
-    height: 24px;
-    background: #002a00;
-    color: var(--phosphor-dim);
-    display: flex;
-    align-items: center;
-    padding: 0 18px;
-    box-sizing: border-box;
-    font-family: inherit;
-    font-size: clamp(12px, 2.4vmin, 16px);
-    white-space: nowrap;
-    overflow: hidden;
-    user-select: none;
+    position: absolute; bottom: 14px; left: 14px; right: 14px; height: 24px; background: #002a00;
+    color: var(--phosphor-dim); display: flex; align-items: center; padding: 0 18px; box-sizing: border-box;
+    font-family: inherit; font-size: clamp(12px, 2.4vmin, 16px); white-space: nowrap; overflow: hidden; user-select: none;
   }
-  .function-keys span {
-      margin-right: 1.2em;
-  }
-  .function-keys .f-num {
-      background: var(--phosphor-dim);
-      color: #002a00;
-      padding: 0 4px;
-      margin-right: 4px;
-      font-weight: normal;
-  }
-  /* --- END NEW --- */
+  .function-keys span { margin-right: 1.2em; }
+  .function-keys .f-num { background: var(--phosphor-dim); color: #002a00; padding: 0 4px; margin-right: 4px; font-weight: normal; }
 
   .glass{ pointer-events:none; position:absolute; inset:0; border-radius:12px;
     background: linear-gradient(180deg, rgba(0,0,0,.15), rgba(0,0,0,.35)),
@@ -867,78 +824,65 @@ export default function Console({
   }
   .chip:active{ transform:translateY(1px); box-shadow:0 2px 0 #061a0c, 0 0 0 2px #031006 inset; }
 
-  /* --- Rune keyboard --- */
-  .rows{ display:grid; grid-template-rows: repeat(5, 1fr); gap:8px; }
-  .row{ display:grid; grid-template-columns:repeat(5,1fr); gap:6px; }
+  /* --- NEW QWERTY Keyboard Styles --- */
+  .rows{ display: flex; flex-direction: column; gap: 6px; flex: 1; }
+  .row{ display: flex; gap: 6px; justify-content: center; }
 
   .key{
+    flex: 1 1 0; min-width: 20px; height: auto; padding: 10px 0;
     background:linear-gradient(180deg,#121612,#0a0e0a);
-    color:#d8ffe8; border:1px solid #0e120f; border-bottom-color:#050806; border-radius:12px;
-    font-size:clamp(14px, 2.6vmin, 18px);
+    color:#d8ffe8; border:1px solid #0e120f; border-bottom-color:#050806; border-radius:8px;
+    font-size:clamp(14px, 3.5vmin, 20px); font-weight: 600;
     box-shadow:0 3.5px 0 #070b08, 0 0 0 2px #050805 inset;
     text-align:center; user-select:none;
     touch-action:manipulation; -webkit-tap-highlight-color:transparent; cursor:pointer;
-    position:relative; overflow:hidden;
+    display:flex; align-items:center; justify-content:center; gap:8px;
+    -webkit-appearance: none; -moz-appearance: none; appearance: none;
   }
   .key:active{ transform:translateY(1px); box-shadow:0 2px 0 #070b08, 0 0 0 2px #050805 inset; }
-  .key.wide{ grid-column:span 2; }
-  .key.xwide{ grid-column:span 3; }
-  .key.tiny{ font-size:clamp(12px, 2.2vmin, 16px); padding:10px 6px; display:flex; align-items:center; justify-content:center; gap:8px; }
 
-  /* LED for SHIFT/123 */
+  .key.ctrl {
+    background:linear-gradient(180deg, #181c18, #101410);
+    font-size: clamp(11px, 2.5vmin, 14px);
+    text-transform: uppercase;
+  }
+  .key.empty {
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  .key.ctrl.active, .kb.shift-on .key[data-key="SHIFT"] {
+      background: linear-gradient(180deg, #203b28, #15291b);
+      color: #fff;
+  }
+  .kb.sym-on .key[data-key="SYM"] {
+      background: linear-gradient(180deg, #203b28, #15291b);
+      color: #fff;
+  }
+  
+  /* LED for SHIFT/SYM */
   .key.ctrl .label{ opacity:.9; letter-spacing:.6px; font-weight:700; }
   .key.ctrl .led{
-    display:inline-block;            /* <-- make it boxy */
-    width:9px; height:9px;           /* now these apply */
-    border-radius:50%;
-    margin-left:8px;                 /* spacing from label */
+    display:inline-block; width:8px; height:8px; border-radius:50%;
+    margin-left:4px;
     background:radial-gradient(circle at 35% 35%, var(--led-off) 0%, #3a320b 70%);
     box-shadow:0 0 0 2px rgba(0,0,0,.35) inset;
     filter:saturate(120%);
   }
   .kb.shift-on .key[data-key="SHIFT"] .led,
-  .kb.num-on   .key[data-key="NUM"]   .led{
+  .kb.sym-on   .key[data-key="SYM"]   .led,
+  .kb.sym-on   .key[data-key="ABC"]   .led {
     background:radial-gradient(circle at 35% 35%, var(--led-on) 0%, #9a7b17 75%);
     box-shadow:0 0 6px rgba(255,216,74,.45), 0 0 0 2px rgba(0,0,0,.35) inset;
-  }
-
-  /* Quad keys */
-  .key.quad{ padding:10px 6px; }
-  .key.quad .quadbox{
-    display:grid; grid-template-columns:1fr 1fr; grid-template-rows:1fr 1fr; gap:0;
-    position:relative; place-items:center; height:100%;
-  }
-  .key.quad .cell{
-    padding:2px 2px; font-weight:700; letter-spacing:.6px;
-    text-shadow:0 0 6px rgba(0,255,130,.22), 0 0 18px rgba(0,255,100,.08);
-  }
-  .key.quad .tl, .key.quad .tr{ opacity:.95; }
-  .key.quad .bl, .key.quad .br{ opacity:.45; }
-
-  /* Dividing runes (glassy crosshair) */
-  .key.quad::before, .key.quad::after{
-    content:""; position:absolute; left:10%; right:10%; top:50%; height:2px; transform:translateY(-1px);
-    background:linear-gradient(90deg, rgba(77,209,122,.00), rgba(77,209,122,.30), rgba(77,209,122,.00));
-    filter:blur(.2px); opacity:.35;
-  }
-  .key.quad::after{
-    top:10%; bottom:10%; left:50%; right:auto; width:2px; height:auto; transform:translateX(-1px);
-    background:linear-gradient(180deg, rgba(77,209,122,.00), rgba(77,209,122,.30), rgba(77,209,122,.00));
-  }
-
-  /* Subtle shimmer for mystery */
-  .key.quad .quadbox::after{
-    content:""; position:absolute; inset:0;
-    background:radial-gradient(120% 80% at 20% 0%, rgba(255,255,255,.05), rgba(0,0,0,0) 60%);
-    mix-blend-mode:screen; pointer-events:none;
   }
 
   /* Make sure everything fits on small phones */
   @media (max-width: 420px){
     .crt .inner{ inset:10px; }
     .chip{ padding:6px 8px; border-radius:12px; }
-    .key{ padding:12px 6px; }
-    .key.tiny{ padding:8px 4px; gap:6px; }
+    .rows { gap: 5px; }
+    .row { gap: 5px; }
+    .key { border-radius: 6px; }
   }
   `;
 
@@ -993,14 +937,8 @@ export default function Console({
             </button>
           </div>
 
-          <div className="rows">
-            <div className="row" id="r0"></div>
-            {/* quad rows */}
-            <div className="row" id="r1"></div>
-            <div className="row" id="r2"></div>
-            <div className="row" id="r3"></div>
-            {/* bottom controls */}
-            <div className="row" id="r4"></div>
+          <div className="rows" id="keyboard-rows">
+            {/* Keyboard rows will be dynamically generated here */}
           </div>
         </div>
       </div>
