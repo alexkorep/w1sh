@@ -758,8 +758,8 @@ export default function Console({
   /* --- Command chips --- */
   .kb{ flex:1 1 50%; min-height:38vh; margin:0 8px 10px; display:flex; flex-direction:column; gap:8px; }
   .bar{ display:grid; grid-template-columns:repeat(5,1fr); gap:8px; justify-content:center; }
-  .chip{ background:linear-gradient(180deg,#103818,#0e2a15); color:var(--btn-text); border:1px solid #0b2a14; border-bottom-color:#071c0d; border-radius:14px; padding:8px 0; font-weight:600; letter-spacing:.6px; box-shadow:0 3px 0 #061a0c, 0 0 0 2px #031006 inset; text-transform:uppercase; user-select:none; touch-action:manipulation; -webkit-tap-highlight-color:transparent; cursor:pointer; text-align:center; }
-  .chip:active{ transform:translateY(1px); box-shadow:0 2px 0 #061a0c, 0 0 0 2px #031006 inset; }
+  .chip{ background:linear-gradient(180deg, #555, #444); color:#dcdcdc; border:1px solid #333; border-bottom-color:#222; border-radius:6px; padding:8px 0; font-weight:normal; letter-spacing:.6px; box-shadow:0 3px 0 #2a2a2a, 0 0 0 2px #202020 inset; text-transform:uppercase; user-select:none; touch-action:manipulation; -webkit-tap-highlight-color:transparent; cursor:pointer; text-align:center; }
+  .chip:active{ transform:translateY(1px); box-shadow:0 2px 0 #2a2a2a, 0 0 0 2px #202020 inset; }
 
   /* --- NEW Static QWERTY Keyboard Styles --- */
   .rows{ display: flex; flex-direction: column; gap: 6px; flex: 1; }
@@ -768,28 +768,28 @@ export default function Console({
   .key{
     position: relative; /* For positioning child elements */
     flex: 1 1 0; min-width: 20px; height: auto; padding: 10px 0;
-    background:linear-gradient(180deg,#121612,#0a0e0a);
-    color: var(--phosphor); border:1px solid #0e120f; border-bottom-color:#050806; border-radius:8px;
-    box-shadow:0 3.5px 0 #070b08, 0 0 0 2px #050805 inset;
+    background:linear-gradient(180deg, #555, #444);
+    color: #dcdcdc; border:1px solid #333; border-bottom-color:#222; border-radius:6px;
+    box-shadow:0 3px 0 #2a2a2a, 0 0 0 2px #202020 inset;
     text-align:center; user-select:none;
     touch-action:manipulation; -webkit-tap-highlight-color:transparent; cursor:pointer;
     display:flex; align-items:center; justify-content:center;
     -webkit-appearance: none; -moz-appearance: none; appearance: none;
     transition: background .1s ease, color .1s ease;
   }
-  .key:active{ transform:translateY(1px); box-shadow:0 2px 0 #070b08, 0 0 0 2px #050805 inset; }
+  .key:active{ transform:translateY(1px); box-shadow:0 2px 0 #2a2a2a, 0 0 0 2px #202020 inset; }
 
   .key .char-main {
     font-size: clamp(16px, 3.5vmin, 22px);
-    font-weight: 600;
+    font-weight: normal;
   }
   .key .char-sym {
     position: absolute;
     top: 2px;
     right: 5px;
     font-size: clamp(11px, 2vmin, 14px);
-    color: var(--phosphor-dim);
-    opacity: 0.7;
+    color: #a0a0a0;
+    opacity: 0.9;
   }
   .key.ctrl .char-main {
     font-size: clamp(11px, 2.5vmin, 14px);
@@ -797,12 +797,11 @@ export default function Console({
     text-transform: uppercase;
   }
 
-  .key.ctrl { background:linear-gradient(180deg, #181c18, #101410); }
   .key.empty { opacity: 0; pointer-events: none; }
 
   /* Active states for SHIFT/SYM keys ONLY */
   .key.ctrl.active {
-      background: linear-gradient(180deg, #203b28, #15291b);
+      background: linear-gradient(180deg, #666, #555);
       color: #fff;
   }
   
