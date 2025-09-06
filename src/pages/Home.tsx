@@ -43,7 +43,11 @@ export default function Home({ onNewGame, onContinue }: HomeProps): JSX.Element 
     };
   }, []);
 
+
+  // Only request fullscreen on mobile devices
+  const isMobile = /Android|iPhone|iPad/i.test(navigator.userAgent);
   const requestFullscreen = async (): Promise<void> => {
+    if (!isMobile) return;
     const el = document.documentElement;
     if (el.requestFullscreen) {
       try {
