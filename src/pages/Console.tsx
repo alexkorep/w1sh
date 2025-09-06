@@ -18,7 +18,7 @@ export default function Console({ newGame }: ConsoleProps): JSX.Element {
       const statusEl = document.getElementById("status");
       const kb = document.getElementById("kb");
 
-      let __MUTE = false; // used by self-tests to silence output
+      let __MUTE = false;
 
       function print(txt = "") {
         if (__MUTE) return;
@@ -36,12 +36,13 @@ export default function Console({ newGame }: ConsoleProps): JSX.Element {
         });
       }
 
-      // Simple PC speaker beep (requires a user gesture on mobile first)
+      // Simple PC speaker beep
       let audioCtx = null;
       function initAudio() {
         if (!audioCtx) {
           try {
-            audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            audioCtx = new (window.AudioContext ||
+              (window as any).webkitAudioContext)();
           } catch (e) {}
         }
       }
@@ -119,10 +120,9 @@ export default function Console({ newGame }: ConsoleProps): JSX.Element {
           node = node[p];
           if (node.type === "dir") node = node.children;
         }
-        return node; // for files/apps you get the node, for dirs you get its map
+        return node;
       }
       function resolve(path) {
-        // returns [type, node] or [null,null]
         const parts = path.replace(/\\/g, "/").split("/").filter(Boolean);
         let ref = path.match(/^[A-Za-z]:/) ? [path.slice(0, 2)] : [...cwd];
         for (const part of parts) {
@@ -167,7 +167,6 @@ export default function Console({ newGame }: ConsoleProps): JSX.Element {
         clearInterval(cursorTimer);
       }
       function renderCursor() {
-        // rewrite current line: remove any existing cursor char
         screen.textContent = screen.textContent.replace(/▌$/, "");
         if (promptActive && cursorVisible) {
           print("▌");
@@ -175,9 +174,7 @@ export default function Console({ newGame }: ConsoleProps): JSX.Element {
       }
 
       function setLine(text) {
-        // replace buffer visually
         const noCursor = screen.textContent.replace(/▌$/, "");
-        // Remove previous buffer characters (after last '> ')
         const idx = noCursor.lastIndexOf("> ");
         const base = noCursor.slice(0, idx + 2);
         screen.textContent = base + text;
@@ -197,7 +194,6 @@ export default function Console({ newGame }: ConsoleProps): JSX.Element {
         if (!promptActive) return;
         promptActive = false;
         stopCursor();
-        // finalize line
         const noCursor = screen.textContent.replace(/▌$/, "");
         screen.textContent = noCursor + "\n";
         const cmd = lineBuffer.trim();
@@ -225,7 +221,6 @@ export default function Console({ newGame }: ConsoleProps): JSX.Element {
           drawPrompt();
           return;
         }
-
         const joinRest = () => input.slice(cmd.length).trim();
 
         switch (cmd) {
@@ -271,12 +266,11 @@ export default function Console({ newGame }: ConsoleProps): JSX.Element {
             break;
           case "REBOOT":
             boot(true);
-            return; // boot draws its own prompt
+            return;
           case "TESTS":
             runSelfTests(true);
             break;
           default:
-            // app by name
             if (tryRunByName(cmd)) {
             } else {
               println(
@@ -347,14 +341,12 @@ export default function Console({ newGame }: ConsoleProps): JSX.Element {
         tryRunByName(name.toUpperCase());
       }
       function tryRunByName(name) {
-        // with or without .EXE
         const prog = name.replace(/\.EXE$/i, "");
         const here = nodeAtPath(cwd);
         const keyExe = prog + ".EXE";
         if (here && here[keyExe] && here[keyExe].type === "app") {
           return runApp(here[keyExe].run);
         }
-        // also check in C:\\GAMES
         const games = nodeAtPath(["C:", "GAMES"]);
         if (games && games[keyExe] && games[keyExe].type === "app") {
           return runApp(games[keyExe].run);
@@ -372,7 +364,6 @@ export default function Console({ newGame }: ConsoleProps): JSX.Element {
       }
       function demoApp() {
         println("Launching DEMO.EXE...");
-        // Tiny ASCII starfield demo for ~3 seconds
         const W = 38,
           H = 10;
         let t = 0;
@@ -392,7 +383,6 @@ export default function Console({ newGame }: ConsoleProps): JSX.Element {
             }
             rows.push(row);
           }
-          // erase to anchor
           screen.textContent = screen.textContent.slice(0, anchorLen);
           println(rows.join("\n"));
           if (frames >= maxFrames) {
@@ -405,7 +395,6 @@ export default function Console({ newGame }: ConsoleProps): JSX.Element {
         return true;
       }
 
-      // ----- HELP -----
       function helpCmd() {
         println("\nPOCKET DOS (sim) Help");
         println("----------------------");
@@ -419,53 +408,84 @@ export default function Console({ newGame }: ConsoleProps): JSX.Element {
         println(" BEEP              beep the PC speaker");
         println(" TESTS             run built-in self tests");
         println(" REBOOT            reboot the simulated PC");
-        println("\nTips: tap the chips above the keyboard for quick commands.");
+        println(
+          "\nTips: SHIFT toggles the lower glyph on rune-keys. MODE switches ABC/123."
+        );
       }
 
-      // ----- Keyboard layout -----
-      const rows = [
-        ["1", "2", "3", "4", "5", "6", "7", "8", "9", "0", "-", "\\"],
-        ["Q", "W", "E", "R", "T", "Y", "U", "I", "O", "P"],
-        ["A", "S", "D", "F", "G", "H", "J", "K", "L", ":"],
-        ["Z", "X", "C", "V", "B", "N", "M", ".", "/"],
-      ];
-      function makeKey(ch) {
+      // ====== NEW: Rune keyboard ======
+      const duoLayers = {
+        letters: [
+          ["QW", "ER", "TY", "UI", "OP"],
+          ["AS", "DF", "GH", "JK", "L:"],
+          ["ZX", "CV", "BN", "M.", "/-"],
+        ],
+        symbols: [
+          ["12", "34", "56", "78", "90"],
+          ["-\\", ":.", ",;", "()", "[]"],
+          ["'\"", "+=", "/*", "/?", "&_"],
+        ],
+      };
+      let layer: "letters" | "symbols" = "letters";
+      let shift = false;
+
+      function setKbState() {
+        kb.classList.toggle("shift-on", shift);
+        kb.setAttribute("data-layer", layer);
+        const modeBtn = kb.querySelector(
+          '[data-key="MODE"]'
+        ) as HTMLButtonElement;
+        if (modeBtn) modeBtn.textContent = layer === "letters" ? "123" : "ABC";
+      }
+
+      function makeCtrlKey(code: string, label: string) {
         const b = document.createElement("button");
-        b.className = "key";
-        b.textContent = ch;
-        b.dataset.key = ch;
+        b.className = "key tiny ctrl";
+        b.dataset.key = code;
+        b.textContent = label;
         return b;
+      }
+      function makeDuo(pair: string) {
+        const b = document.createElement("button");
+        b.className = "key duo";
+        b.dataset.pair = pair;
+        b.innerHTML = `<span class="pair"><span class="top">${pair[0]}</span><span class="mid"></span><span class="bottom">${pair[1]}</span></span>`;
+        return b;
+      }
+
+      function clear(el: HTMLElement) {
+        while (el.firstChild) el.removeChild(el.firstChild);
+      }
+
+      function renderAlphaRows() {
+        const r1 = document.getElementById("r1");
+        const r2 = document.getElementById("r2");
+        const r3 = document.getElementById("r3");
+        clear(r1);
+        clear(r2);
+        clear(r3);
+        const L = duoLayers[layer];
+        for (const p of L[0]) r1.appendChild(makeDuo(p));
+        for (const p of L[1]) r2.appendChild(makeDuo(p));
+        for (const p of L[2]) r3.appendChild(makeDuo(p));
       }
 
       function buildKeyboard() {
         const r0 = document.getElementById("r0");
-        const r1 = document.getElementById("r1");
-        const r2 = document.getElementById("r2");
-        const r3 = document.getElementById("r3");
         const r4 = document.getElementById("r4");
-        // row 0: Control keys + digits
-        const ctrl = [
-          ["TAB", "TAB"],
-          ["UP", "HIST↑"],
-          ["DN", "HIST↓"],
-          ["BKSP", "BKSP"],
-        ];
-        for (const [code, label] of ctrl) {
-          const b = document.createElement("button");
-          b.className = "key tiny";
-          b.textContent = label;
-          b.dataset.key = code;
-          r0.appendChild(b);
-        }
-        for (const ch of rows[0]) r0.appendChild(makeKey(ch));
+        clear(r0);
+        clear(r4);
 
-        for (const ch of rows[1]) r1.appendChild(makeKey(ch));
-        for (const ch of rows[2]) r2.appendChild(makeKey(ch));
+        // Compact control strip
+        r0.appendChild(makeCtrlKey("TAB", "TAB"));
+        r0.appendChild(makeCtrlKey("BKSP", "BKSP"));
+        r0.appendChild(makeCtrlKey("UP", "H↑"));
+        r0.appendChild(makeCtrlKey("DN", "H↓"));
+        r0.appendChild(makeCtrlKey("MODE", "123")); // toggles ABC/123
 
-        // row 3 letters + special
-        for (const ch of rows[3]) r3.appendChild(makeKey(ch));
+        renderAlphaRows();
 
-        // bottom row: SHIFT, SPACE, ENTER
+        // Bottom row
         const bottom = [
           ["SHIFT", "SHIFT"],
           ["SPACE", "SPACE"],
@@ -480,19 +500,20 @@ export default function Console({ newGame }: ConsoleProps): JSX.Element {
           b.dataset.key = code;
           r4.appendChild(b);
         }
+        setKbState();
       }
 
-      let shift = false;
       function pressKey(code) {
         initAudio();
         if (code.length === 1) {
           handleChar(shift ? code : code.toLowerCase());
-          if (shift) shift = false;
+          if (shift) (shift = false), setKbState();
           return;
         }
         switch (code) {
           case "SHIFT":
             shift = !shift;
+            setKbState();
             break;
           case "SPACE":
             handleChar(" ");
@@ -512,13 +533,24 @@ export default function Console({ newGame }: ConsoleProps): JSX.Element {
           case "DN":
             downHistory();
             break;
-          default: // unknown
+          case "MODE":
+            layer = layer === "letters" ? "symbols" : "letters";
+            renderAlphaRows();
+            setKbState();
+            break;
+          default: /* noop */
         }
+      }
+      function pressDuo(pair) {
+        const ch = shift ? pair[1] : pair[0];
+        pressKey(ch);
       }
 
       // Command chips
       document.getElementById("cmdbar").addEventListener("click", (e) => {
-        const b = e.target.closest("[data-cmd]");
+        const b = (e.target as HTMLElement).closest(
+          "[data-cmd]"
+        ) as HTMLElement;
         if (!b) return;
         const c = b.dataset.cmd;
         if (c === "REBOOT") {
@@ -528,10 +560,7 @@ export default function Console({ newGame }: ConsoleProps): JSX.Element {
         }
       });
       function typeCommand(c) {
-        // write command to buffer and submit
-        if (!promptActive) {
-          return;
-        }
+        if (!promptActive) return;
         setLine(c);
         submit();
       }
@@ -574,9 +603,15 @@ export default function Console({ newGame }: ConsoleProps): JSX.Element {
       );
 
       kb.addEventListener("click", (e) => {
-        const b = e.target.closest(".key");
+        const b = (e.target as HTMLElement).closest(".key") as HTMLElement;
         if (!b) return;
+        const pair = b.dataset.pair;
+        if (pair) {
+          pressDuo(pair);
+          return;
+        }
         const k = b.dataset.key;
+        if (!k) return;
         pressKey(k);
       });
 
@@ -589,7 +624,6 @@ export default function Console({ newGame }: ConsoleProps): JSX.Element {
         const fail = (name, err) =>
           results.push({ name, pass: false, err: String(err).slice(0, 140) });
 
-        // Preserve state
         const saved = {
           text: screen.textContent,
           promptActive,
@@ -599,7 +633,6 @@ export default function Console({ newGame }: ConsoleProps): JSX.Element {
         };
         stopCursor();
         try {
-          // 1: helpCmd exists
           try {
             if (typeof helpCmd !== "function")
               throw new Error("helpCmd missing");
@@ -607,8 +640,6 @@ export default function Console({ newGame }: ConsoleProps): JSX.Element {
           } catch (e) {
             fail("helpCmd exists", e);
           }
-
-          // 2: exec('HELP') runs without throwing (muted)
           try {
             __MUTE = true;
             exec("HELP");
@@ -618,8 +649,6 @@ export default function Console({ newGame }: ConsoleProps): JSX.Element {
           } finally {
             __MUTE = false;
           }
-
-          // 3: dir/type basic sanity (muted)
           try {
             __MUTE = true;
             dirCmd();
@@ -631,7 +660,6 @@ export default function Console({ newGame }: ConsoleProps): JSX.Element {
             __MUTE = false;
           }
         } finally {
-          // restore state
           screen.textContent = saved.text;
           promptActive = saved.promptActive;
           lineBuffer = saved.lineBuffer;
@@ -701,21 +729,16 @@ export default function Console({ newGame }: ConsoleProps): JSX.Element {
   }, []);
 
   const css = `
-
   :root{
     --screen-bg:#001400;
     --phosphor:#00ff80;
     --phosphor-dim:#00b060;
-    --bezel:#1a1a1a;
-    --bezel-edge:#0a0a0a;
-    --accent:#4dd17a;
-    --btn:#151a16;
-    --btn-edge:#0d100e;
-    --btn-text:#d9ffe6;
+    --bezel:#1a1a1a; --bezel-edge:#0a0a0a; --accent:#4dd17a;
+    --btn:#151a16; --btn-edge:#0d100e; --btn-text:#d9ffe6;
   }
   html, body { height:100%; }
   body{
-    margin:0; background: #0c0f0c; color:#d9ffe6; font: 14px/1.4 ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+    margin:0; background:#0c0f0c; color:#d9ffe6; font:14px/1.4 ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
     display:flex; flex-direction:column; gap:8px;
   }
   .wrap{ display:flex; flex-direction:column; width:100%; height:100%; }
@@ -723,87 +746,69 @@ export default function Console({ newGame }: ConsoleProps): JSX.Element {
   /* --- CRT Screen --- */
   .crt{
     position:relative; flex: 1 1 50%; min-height:45vh; max-height:60vh; margin:8px; border-radius:20px; overflow:hidden;
-    border: 8px solid var(--bezel); box-shadow:
-      0 0 0 2px var(--bezel-edge) inset,
-      0 40px 80px rgba(0,0,0,.7),
-      0 12px 24px rgba(0,0,0,.8) inset;
-    background: radial-gradient(120% 80% at 50% 50%, #001c00 0%, #000b00 75%);
+    border:8px solid var(--bezel); box-shadow:0 0 0 2px var(--bezel-edge) inset, 0 40px 80px rgba(0,0,0,.7), 0 12px 24px rgba(0,0,0,.8) inset;
+    background:radial-gradient(120% 80% at 50% 50%, #001c00 0%, #000b00 75%);
   }
   .crt .inner{
     position:absolute; inset:14px; border-radius:12px; background: var(--screen-bg);
-    box-shadow: 0 0 0 2px rgba(0,0,0,.65) inset,
-                0 0 80px rgba(0,255,130,.06) inset,
-                0 0 220px rgba(0,200,100,.05) inset;
-    overflow:auto; scroll-behavior: smooth;
-    -webkit-overflow-scrolling: touch;
-    filter: saturate(90%) contrast(110%) brightness(95%);
+    box-shadow:0 0 0 2px rgba(0,0,0,.65) inset, 0 0 80px rgba(0,255,130,.06) inset, 0 0 220px rgba(0,200,100,.05) inset;
+    overflow:auto; -webkit-overflow-scrolling:touch; filter:saturate(90%) contrast(110%) brightness(95%);
   }
-  pre#screen{ margin:0; padding:16px 18px 40px; color:var(--phosphor); font-size: clamp(12px, 2.6vmin, 18px); text-shadow: 0 0 6px rgba(0,255,130,.35), 0 0 18px rgba(0,255,100,.12);
+  pre#screen{ margin:0; padding:16px 18px 40px; color:var(--phosphor); font-size:clamp(12px, 2.6vmin, 18px); text-shadow:0 0 6px rgba(0,255,130,.35), 0 0 18px rgba(0,255,100,.12);
     white-space:pre-wrap; word-wrap:break-word; }
 
-  /* Scanlines + glow */
   .glass{ pointer-events:none; position:absolute; inset:0; border-radius:12px;
-    background:
-      linear-gradient(180deg, rgba(0,0,0,.15), rgba(0,0,0,.35)),
-      radial-gradient(60% 90% at 50% 10%, rgba(255,255,255,.06), rgba(0,0,0,0) 60%),
-      repeating-linear-gradient( to bottom, rgba(0,0,0,.05) 0, rgba(0,0,0,.05) 1px, rgba(0,0,0,0) 2px, rgba(0,0,0,0) 4px );
-    mix-blend-mode: screen; animation: flicker 3.6s infinite;
+    background: linear-gradient(180deg, rgba(0,0,0,.15), rgba(0,0,0,.35)),
+                radial-gradient(60% 90% at 50% 10%, rgba(255,255,255,.06), rgba(0,0,0,0) 60%),
+                repeating-linear-gradient(to bottom, rgba(0,0,0,.05) 0, rgba(0,0,0,.05) 1px, rgba(0,0,0,0) 2px, rgba(0,0,0,0) 4px);
+    mix-blend-mode:screen; animation:flicker 3.6s infinite;
   }
-  @keyframes flicker{
-    0%, 19%, 21%, 23%, 100%{ opacity: .9; }
-    20%, 22% { opacity:.72; }
-  }
-  .vignette{ position:absolute; inset:0; pointer-events:none; border-radius:12px;
-    box-shadow: inset 0 0 120px rgba(0,0,0,.6), inset 0 0 300px rgba(0,0,0,.75);
-  }
-  .status{
-    position:absolute; right:18px; top:10px; font-size: 12px; color:#a9ffcd; opacity:.75;
-    text-shadow:0 0 10px rgba(0,255,120,.25);
-  }
-  .blink{ animation: blink 1.05s step-start infinite; }
-  @keyframes blink{ 50%{ opacity:0; } }
+  @keyframes flicker{ 0%,19%,21%,23%,100%{opacity:.9;} 20%,22%{opacity:.72;} }
+  .vignette{ position:absolute; inset:0; pointer-events:none; border-radius:12px; box-shadow: inset 0 0 120px rgba(0,0,0,.6), inset 0 0 300px rgba(0,0,0,.75); }
+  .status{ position:absolute; right:18px; top:10px; font-size:12px; color:#a9ffcd; opacity:.75; text-shadow:0 0 10px rgba(0,255,120,.25); }
 
-  /* --- Keyboard / Command Pad --- */
-  .kb{
-    flex: 1 1 50%; min-height:38vh; margin:0 8px 10px; display:flex; flex-direction:column; gap:8px;
-  }
-  .bar{
-    display: grid;
-    grid-template-columns: repeat(5, 1fr);
-    gap: 8px;
-    justify-content: center;
-  }
+  /* --- Command chips --- */
+  .kb{ flex:1 1 50%; min-height:38vh; margin:0 8px 10px; display:flex; flex-direction:column; gap:8px; }
+  .bar{ display:grid; grid-template-columns:repeat(5,1fr); gap:8px; justify-content:center; }
   .chip{
-    background: linear-gradient(180deg, #103818, #0e2a15); color:var(--btn-text);
-    border:1px solid #0b2a14; border-bottom-color:#071c0d; border-radius:14px; padding:8px 0; /* Adjusted padding for uniform height */
-    font-weight:600; letter-spacing:.6px;
-    box-shadow: 0 3px 0 #061a0c, 0 0 0 2px #031006 inset; text-transform:uppercase; user-select:none;
-    touch-action: manipulation; -webkit-tap-highlight-color: transparent; cursor:pointer;
-    text-align: center; /* Center text */
+    background:linear-gradient(180deg,#103818,#0e2a15); color:var(--btn-text);
+    border:1px solid #0b2a14; border-bottom-color:#071c0d; border-radius:14px; padding:8px 0;
+    font-weight:600; letter-spacing:.6px; box-shadow:0 3px 0 #061a0c, 0 0 0 2px #031006 inset;
+    text-transform:uppercase; user-select:none; touch-action:manipulation; -webkit-tap-highlight-color:transparent; cursor:pointer; text-align:center;
   }
-  .chip:active{ transform: translateY(1px); box-shadow: 0 2px 0 #061a0c, 0 0 0 2px #031006 inset; }
+  .chip:active{ transform:translateY(1px); box-shadow:0 2px 0 #061a0c, 0 0 0 2px #031006 inset; }
 
+  /* --- Rune keyboard --- */
   .rows{ display:grid; grid-template-rows: repeat(5, 1fr); gap:8px; }
-  .row{ display:grid; grid-auto-flow: column; grid-auto-columns: 1fr; gap:6px; }
+  .row{ display:grid; grid-template-columns:repeat(5,1fr); gap:6px; }
   .key{
-    background: linear-gradient(180deg, #121612, #0a0e0a); color:#d8ffe8; border:1px solid #0e120f;
-    border-bottom-color:#050806; border-radius:10px; padding:14px 10px; font-size: clamp(14px, 2.6vmin, 18px);
-    box-shadow: 0 3.5px 0 #070b08, 0 0 0 2px #050805 inset; text-align:center; user-select:none;
-    touch-action: manipulation; -webkit-tap-highlight-color: transparent; cursor:pointer;
+    background:linear-gradient(180deg,#121612,#0a0e0a); color:#d8ffe8; border:1px solid #0e120f; border-bottom-color:#050806; border-radius:10px;
+    font-size:clamp(14px, 2.6vmin, 18px);
+    box-shadow:0 3.5px 0 #070b08, 0 0 0 2px #050805 inset; text-align:center; user-select:none;
+    touch-action:manipulation; -webkit-tap-highlight-color:transparent; cursor:pointer;
   }
-  .key:active{ transform: translateY(1px); box-shadow: 0 2px 0 #070b08, 0 0 0 2px #050805 inset; }
-  .key.wide{ grid-column: span 3; }
-  .key.xwide{ grid-column: span 6; }
-  .key.tiny{ font-size: clamp(12px, 2.2vmin, 16px); }
-  .legend{ opacity:.75; font-size: .8em; display:block; line-height:1; margin-top:2px; }
+  .key:active{ transform:translateY(1px); box-shadow:0 2px 0 #070b08, 0 0 0 2px #050805 inset; }
+  .key.wide{ grid-column:span 2; }
+  .key.xwide{ grid-column:span 3; }
+  .key.tiny{ font-size:clamp(12px, 2.2vmin, 16px); padding:10px 6px; }
+
+  .key.duo{ display:grid; place-items:center; padding:10px 6px; }
+  .key.duo .pair{ display:grid; grid-template-rows:auto 2px auto; align-items:center; gap:2px; }
+  .key.duo .mid{ width:18px; height:2px; justify-self:center; background:rgba(77,209,122,.25); border-radius:2px; }
+  .key.duo .top{ font-weight:700; letter-spacing:.6px; opacity:1; }
+  .key.duo .bottom{ font-weight:600; letter-spacing:.6px; opacity:.35; }
+
+  /* SHIFT highlight flips emphasis */
+  .kb.shift-on .key.duo .top{ opacity:.35; }
+  .kb.shift-on .key.duo .bottom{ opacity:1; }
 
   /* Make sure everything fits on small phones */
   @media (max-width: 420px){
     .crt .inner{ inset:10px; }
-    .chip{ padding:6px 10px; border-radius:12px; }
-    .key{ padding:12px 8px; }
+    .chip{ padding:6px 8px; border-radius:12px; }
+    .key{ padding:12px 6px; }
+    .key.tiny{ padding:8px 4px; }
   }
-
   `;
 
   return (
@@ -821,7 +826,7 @@ export default function Console({ newGame }: ConsoleProps): JSX.Element {
           </div>
         </div>
 
-        <div className="kb" id="kb">
+        <div className="kb" id="kb" data-layer="letters">
           <div className="bar" id="cmdbar">
             <button className="chip" data-cmd="DIR">
               F1
@@ -854,12 +859,18 @@ export default function Console({ newGame }: ConsoleProps): JSX.Element {
               F10
             </button>
           </div>
+
           <div className="rows">
             <div className="row" id="r0"></div>
+            {/* control strip */}
             <div className="row" id="r1"></div>
+            {/* duo row 1 */}
             <div className="row" id="r2"></div>
+            {/* duo row 2 */}
             <div className="row" id="r3"></div>
+            {/* duo row 3 */}
             <div className="row" id="r4"></div>
+            {/* SHIFT / SPACE / ENTER */}
           </div>
         </div>
       </div>
