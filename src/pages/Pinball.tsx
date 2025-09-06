@@ -1,14 +1,9 @@
-<!DOCTYPE html>
-<html lang="en">
-  <head>
-    <meta charset="utf-8" />
-    <meta
-      name="viewport"
-      content="width=device-width, initial-scale=1,maximum-scale=1,user-scalable=no"
-    />
-    <title>Pinball – Single File</title>
-    <style>
-      html,
+// @ts-nocheck
+import { useEffect } from "react";
+
+export default function Pinball(): JSX.Element {
+  const css = `
+html,
       body {
         margin: 0;
         height: 100%;
@@ -61,18 +56,10 @@
         top: 50%;
         transform: translate(-50%, -50%);
       }
-    </style>
-  </head>
-  <body>
-    <canvas id="c"></canvas>
-    <div id="ui">
-      <div class="panel" id="score">Score: 0</div>
-      <div class="panel" id="balls">Balls: ∞</div>
-    </div>
-    <div id="hint">Tap left/right to flip • Higher bumpers pay up to 1000x</div>
+  `;
 
-    <script>
-      (() => {
+  useEffect(() => {
+(() => {
         const canvas = document.getElementById("c");
         const ctx = canvas.getContext("2d");
 
@@ -824,6 +811,17 @@
         resize();
         requestAnimationFrame(loop);
       })();
-    </script>
-  </body>
-</html>
+  }, []);
+
+  return (
+    <div>
+      <style>{css}</style>
+      <canvas id="c"></canvas>
+      <div id="ui">
+      <div className="panel" id="score">Score: 0</div>
+      <div className="panel" id="balls">Balls: ∞</div>
+      </div>
+      <div id="hint">Tap left/right to flip • Higher bumpers pay up to 1000x</div>
+    </div>
+  );
+}
