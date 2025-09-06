@@ -1,7 +1,10 @@
 // @ts-nocheck
 import { useEffect } from "react";
+import useGameState from "../hooks/useGameState";
 
 export default function Pinball(): JSX.Element {
+  const { setPage } = useGameState();
+  const handleExit = () => setPage("console");
   const css = `
 html,
       body {
@@ -55,6 +58,13 @@ html,
         left: 50%;
         top: 50%;
         transform: translate(-50%, -50%);
+      }
+      #exit-btn {
+        position: fixed;
+        bottom: 10px;
+        right: 10px;
+        pointer-events: auto;
+        cursor: pointer;
       }
   `;
 
@@ -817,6 +827,9 @@ html,
     <div>
       <style>{css}</style>
       <canvas id="c"></canvas>
+      <button id="exit-btn" className="panel" onClick={handleExit}>
+        Exit
+      </button>
       <div id="ui">
       <div className="panel" id="score">Score: 0</div>
       <div className="panel" id="balls">Balls: ∞</div>
