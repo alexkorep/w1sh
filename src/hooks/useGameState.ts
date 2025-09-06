@@ -1,6 +1,13 @@
 import { useEffect, useState } from "react";
 
-export type Page = "ad" | "chat" | "arrival" | "title" | "console";
+export type Page =
+  | "ad"
+  | "chat"
+  | "arrival"
+  | "title"
+  | "console"
+  | "elite"
+  | "pinball";
 
 interface GameState {
   page: Page;
