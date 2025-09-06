@@ -1,11 +1,37 @@
-import type { MouseEvent } from "react";
+import { useEffect, useState, type MouseEvent } from "react";
 
 interface HomeProps {
   onNewGame: () => void;
   onContinue: () => void;
 }
 
+interface BeforeInstallPromptEvent extends Event {
+  prompt: () => Promise<void>;
+  userChoice: Promise<{ outcome: "accepted" | "dismissed"; platform: string }>;
+}
+
 export default function Home({ onNewGame, onContinue }: HomeProps): JSX.Element {
+  const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
+  const [isPwa, setIsPwa] = useState(false);
+
+  useEffect(() => {
+    const handler = (e: Event): void => {
+      e.preventDefault();
+      setDeferredPrompt(e as BeforeInstallPromptEvent);
+    };
+
+    window.addEventListener("beforeinstallprompt", handler);
+
+    const standalone =
+      window.matchMedia("(display-mode: standalone)").matches ||
+      (navigator as any).standalone;
+    setIsPwa(standalone);
+
+    return () => {
+      window.removeEventListener("beforeinstallprompt", handler);
+    };
+  }, []);
+
   const requestFullscreen = async (): Promise<void> => {
     const el = document.documentElement;
     if (el.requestFullscreen) {
@@ -27,6 +53,18 @@ export default function Home({ onNewGame, onContinue }: HomeProps): JSX.Element 
     e.preventDefault();
     await requestFullscreen();
     onContinue();
+  };
+
+  const handleInstall = async (e: MouseEvent): Promise<void> => {
+    e.preventDefault();
+    if (deferredPrompt && !isPwa) {
+      deferredPrompt.prompt();
+      const { outcome } = await deferredPrompt.userChoice;
+      if (outcome === "accepted") {
+        setIsPwa(true);
+      }
+      setDeferredPrompt(null);
+    }
   };
 
   const css = `
@@ -149,6 +187,11 @@ export default function Home({ onNewGame, onContinue }: HomeProps): JSX.Element 
     text-shadow: 0 0 5px #00ff41;
   }
 
+  .menu-item a[aria-disabled="true"] {
+    pointer-events: none;
+    opacity: 0.5;
+  }
+
   /* Hover effect: add a '>' prompt and increase glow */
   .menu-item a:hover {
     background-color: rgba(0, 255, 65, 0.1);
@@ -196,6 +239,15 @@ export default function Home({ onNewGame, onContinue }: HomeProps): JSX.Element 
           <li className="menu-item">
             <a href="#" onClick={handleContinue}>
               Continue
+            </a>
+          </li>
+          <li className="menu-item">
+            <a
+              href="#"
+              onClick={handleInstall}
+              aria-disabled={isPwa || deferredPrompt === null}
+            >
+              Install
             </a>
           </li>
           <li className="menu-item">
