@@ -844,7 +844,10 @@ export default function Console({ newGame }: ConsoleProps): JSX.Element {
   /* LED for SHIFT/123 */
   .key.ctrl .label{ opacity:.9; letter-spacing:.6px; font-weight:700; }
   .key.ctrl .led{
-    width:9px; height:9px; border-radius:50%;
+    display:inline-block;            /* <-- make it boxy */
+    width:9px; height:9px;           /* now these apply */
+    border-radius:50%;
+    margin-left:8px;                 /* spacing from label */
     background:radial-gradient(circle at 35% 35%, var(--led-off) 0%, #3a320b 70%);
     box-shadow:0 0 0 2px rgba(0,0,0,.35) inset;
     filter:saturate(120%);
