@@ -10,6 +10,17 @@ interface BeforeInstallPromptEvent extends Event {
   userChoice: Promise<{ outcome: "accepted" | "dismissed"; platform: string }>;
 }
 
+function getUninstallInstructions(): string {
+  const ua = navigator.userAgent;
+  if (/Android/i.test(ua)) {
+    return "To uninstall: long-press the app icon and select Uninstall.";
+  } else if (/iPhone|iPad/i.test(ua)) {
+    return "To uninstall: long-press the app icon on your home screen and tap Remove App.";
+  } else {
+    return "To uninstall: click ⋮ in the title bar and choose 'Uninstall [App]'.";
+  }
+}
+
 export default function Home({ onNewGame, onContinue }: HomeProps): JSX.Element {
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
   const [isPwa, setIsPwa] = useState(false);
@@ -57,7 +68,9 @@ export default function Home({ onNewGame, onContinue }: HomeProps): JSX.Element 
 
   const handleInstall = async (e: MouseEvent): Promise<void> => {
     e.preventDefault();
-    if (deferredPrompt && !isPwa) {
+    if (isPwa) {
+      alert(getUninstallInstructions());
+    } else if (deferredPrompt) {
       deferredPrompt.prompt();
       const { outcome } = await deferredPrompt.userChoice;
       if (outcome === "accepted") {
@@ -245,9 +258,9 @@ export default function Home({ onNewGame, onContinue }: HomeProps): JSX.Element 
             <a
               href="#"
               onClick={handleInstall}
-              aria-disabled={isPwa || deferredPrompt === null}
+              aria-disabled={!isPwa && deferredPrompt === null}
             >
-              Install
+              {isPwa ? "Uninstall" : "Install"}
             </a>
           </li>
           <li className="menu-item">
