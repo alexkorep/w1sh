@@ -24,6 +24,8 @@ type KeyDef = {
   empty?: boolean;
 };
 
+type ChipCommand = { text: string; onPress: () => void };
+
 export default function Console({ newGame, runGame }: ConsoleProps): JSX.Element {
   // ---------- Audio (no refs) ----------
   const [audioCtx, setAudioCtx] = useState<AudioContext | null>(null);
@@ -72,6 +74,8 @@ export default function Console({ newGame, runGame }: ConsoleProps): JSX.Element
         "README.TXT": file(
           "Welcome to Pocket DOS (sim).\r\n\r\nTry commands: DIR, CLS, TYPE README.TXT, HELP, VER, TIME, DATE, CD NOTES, TYPE TODO.TXT, RUN DEMO, BEEP, TESTS.\r\n"
         ),
+        "ELITE.EXE": app("ELITE", "elite"),
+        "PINBALL.EXE": app("PINBALL", "pinball"),
         NOTES: dir({
           "TODO.TXT": file(
             "- Finish the space trader prototype\r\n- Record DOS simulator demo\r\n- Buy floppies (just kidding)\r\n"
@@ -328,12 +332,20 @@ export default function Console({ newGame, runGame }: ConsoleProps): JSX.Element
           }, 33);
           return true;
         }
+        case "elite":
+          println("Launching ELITE.EXE...");
+          runGame("elite");
+          return true;
+        case "pinball":
+          println("Launching PINBALL.EXE...");
+          runGame("pinball");
+          return true;
         default:
           println("This program cannot be run in this DOS box.");
           return true;
       }
     },
-    [println, buffer, startPrompt]
+    [println, buffer, startPrompt, runGame]
   );
 
   const tryRunByName = useCallback(
@@ -553,18 +565,7 @@ export default function Console({ newGame, runGame }: ConsoleProps): JSX.Element
   );
 
   // ---------- Command chips ----------
-  const chipCommands = useMemo(
-    () => [
-      { label: "F1", cmd: "DIR" },
-      { label: "F2", cmd: "CLS" },
-      { label: "F3", cmd: "CD .." },
-      { label: "F4", cmd: "TYPE README.TXT" },
-      { label: "F5", cmd: "HELP" },
-    ],
-    []
-  );
-
-  const typeCommand = useCallback(
+  const runCommand = useCallback(
     (c: string) => {
       if (!promptActive) return;
       setLine(c);
@@ -573,10 +574,65 @@ export default function Console({ newGame, runGame }: ConsoleProps): JSX.Element
     [promptActive, setLine, submit]
   );
 
+  const [chipMode, setChipMode] = useState<"default" | "run">("default");
+  const [exeList, setExeList] = useState<string[]>([]);
+  const [exePage, setExePage] = useState(0);
+
+  const exitRunMode = useCallback(() => {
+    setChipMode("default");
+    setExeList([]);
+    setExePage(0);
+  }, []);
+
+  const startRunMode = useCallback(() => {
+    if (!promptActive) return;
+    setLine("RUN ");
+    const here = nodeAtPath(cwd) as Record<string, FSNode>;
+    const exes = Object.keys(here)
+      .filter((k) => here[k].type === "app" && /\.EXE$/i.test(k))
+      .sort();
+    setExeList(exes);
+    setExePage(0);
+    setChipMode("run");
+  }, [promptActive, setLine, nodeAtPath, cwd]);
+
+  const chipCommands = useMemo<ChipCommand[]>(() => {
+    if (chipMode === "run") {
+      const start = exePage * 4;
+      const slice = exeList.slice(start, start + 4);
+      const chips: ChipCommand[] = slice.map((exe) => ({
+        text: exe,
+        onPress: () => {
+          setLine(`RUN ${exe}`);
+          exitRunMode();
+        },
+      }));
+      if (exeList.length > start + 4) {
+        chips.push({ text: "MORE", onPress: () => setExePage((p) => p + 1) });
+      }
+      while (chips.length < 5) chips.push({ text: "", onPress: () => {} });
+      return chips;
+    }
+    return [
+      { text: "DIR", onPress: () => runCommand("DIR") },
+      { text: "CLS", onPress: () => runCommand("CLS") },
+      { text: "CD..", onPress: () => runCommand("CD ..") },
+      { text: "RUN", onPress: startRunMode },
+      { text: "HELP", onPress: () => runCommand("HELP") },
+    ];
+  }, [chipMode, exeList, exePage, runCommand, startRunMode, exitRunMode, setLine]);
+
   // ---------- Physical keyboard ----------
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.metaKey || e.ctrlKey) return;
+      const fIdx = /^F([1-5])$/.exec(e.key);
+      if (fIdx) {
+        e.preventDefault();
+        const idx = parseInt(fIdx[1], 10) - 1;
+        chipCommands[idx]?.onPress();
+        return;
+      }
       if (e.key === "Backspace") {
         e.preventDefault();
         backspace();
@@ -599,7 +655,7 @@ export default function Console({ newGame, runGame }: ConsoleProps): JSX.Element
     };
     window.addEventListener("keydown", onKey, { passive: false });
     return () => window.removeEventListener("keydown", onKey as any);
-  }, [backspace, submit, upHistory, downHistory, handleChar]);
+  }, [backspace, submit, upHistory, downHistory, handleChar, chipCommands]);
 
   // ---------- Boot sequence ----------
   const boot = useCallback(
@@ -730,21 +786,12 @@ export default function Console({ newGame, runGame }: ConsoleProps): JSX.Element
             <ConsoleScreen>{renderWithCursor}</ConsoleScreen>
           </div>
           <div className="function-keys">
-            <span>
-              <b className="f-num">1</b>DIR
-            </span>
-            <span>
-              <b className="f-num">2</b>CLS
-            </span>
-            <span>
-              <b className="f-num">3</b>CD..
-            </span>
-            <span>
-              <b className="f-num">4</b>README
-            </span>
-            <span>
-              <b className="f-num">5</b>HELP
-            </span>
+            {chipCommands.map((c, i) => (
+              <span key={i}>
+                <b className="f-num">{i + 1}</b>
+                {c.text}
+              </span>
+            ))}
           </div>
           <div className="glass" />
           <div className="vignette" />
@@ -753,9 +800,9 @@ export default function Console({ newGame, runGame }: ConsoleProps): JSX.Element
 
         <div className="kb">
           <div className="bar">
-            {chipCommands.map((c) => (
-              <button key={c.label} className="chip" onClick={() => (c.cmd === "REBOOT" ? newGame() : typeCommand(c.cmd))}>
-                {c.label}
+            {chipCommands.map((c, i) => (
+              <button key={i} className="chip" onClick={c.onPress} disabled={!c.text}>
+                {c.text || ""}
               </button>
             ))}
           </div>
