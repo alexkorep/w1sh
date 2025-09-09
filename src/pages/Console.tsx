@@ -72,6 +72,8 @@ export default function Console({ newGame, runGame }: ConsoleProps): JSX.Element
         "README.TXT": file(
           "Welcome to Pocket DOS (sim).\r\n\r\nTry commands: DIR, CLS, TYPE README.TXT, HELP, VER, TIME, DATE, CD NOTES, TYPE TODO.TXT, RUN DEMO, BEEP, TESTS.\r\n"
         ),
+        "ELITE.EXE": app("ELITE", "elite"),
+        "PINBALL.EXE": app("PINBALL", "pinball"),
         NOTES: dir({
           "TODO.TXT": file(
             "- Finish the space trader prototype\r\n- Record DOS simulator demo\r\n- Buy floppies (just kidding)\r\n"
@@ -328,12 +330,18 @@ export default function Console({ newGame, runGame }: ConsoleProps): JSX.Element
           }, 33);
           return true;
         }
+        case "elite":
+          runGame("elite");
+          return true;
+        case "pinball":
+          runGame("pinball");
+          return true;
         default:
           println("This program cannot be run in this DOS box.");
           return true;
       }
     },
-    [println, buffer, startPrompt]
+    [println, buffer, startPrompt, runGame]
   );
 
   const tryRunByName = useCallback(
@@ -393,7 +401,7 @@ export default function Console({ newGame, runGame }: ConsoleProps): JSX.Element
           break;
         case "RUN":
           if (parts.length === 0) println("Specify program name.");
-          else tryRunByName(parts.join(" ").toUpperCase());
+          else if (tryRunByName(parts.join(" ").toUpperCase())) return;
           break;
         case "ELITE":
           runGame("elite");
@@ -503,6 +511,9 @@ export default function Console({ newGame, runGame }: ConsoleProps): JSX.Element
 
   const [shift, setShift] = useState(false);
   const [sym, setSym] = useState(false);
+  const [runMode, setRunMode] = useState(false);
+  const [exeList, setExeList] = useState<string[]>([]);
+  const [runPage, setRunPage] = useState(0);
 
   const pressKey = useCallback(
     (def: KeyDef) => {
@@ -552,17 +563,43 @@ export default function Console({ newGame, runGame }: ConsoleProps): JSX.Element
     [handleChar, submit, backspace, upHistory, downHistory, shift, sym, initAudio]
   );
 
+  // ---------- Function key labels ----------
+  const fKeyLabels = useMemo(() => {
+    if (runMode) {
+      const pageSize = 4;
+      const totalPages = Math.ceil(exeList.length / pageSize);
+      const start = runPage * pageSize;
+      const slice = exeList.slice(start, start + pageSize);
+      while (slice.length < pageSize) slice.push("");
+      const labels = [...slice];
+      labels.push(totalPages > 1 ? "MORE" : "");
+      return labels;
+    }
+    return ["DIR", "CLS", "CD..", "RUN", "HELP"];
+  }, [runMode, runPage, exeList]);
+
   // ---------- Command chips ----------
-  const chipCommands = useMemo(
-    () => [
+  const chipCommands = useMemo(() => {
+    if (runMode) {
+      const pageSize = 4;
+      const totalPages = Math.ceil(exeList.length / pageSize);
+      const start = runPage * pageSize;
+      const slice = exeList.slice(start, start + pageSize);
+      const cmds = slice.map((name) => ({ label: name, cmd: name }));
+      while (cmds.length < pageSize) cmds.push({ label: "", cmd: "" });
+      cmds.push(
+        totalPages > 1 ? { label: "MORE", cmd: "__MORE__" } : { label: "", cmd: "" }
+      );
+      return cmds;
+    }
+    return [
       { label: "F1", cmd: "DIR" },
       { label: "F2", cmd: "CLS" },
       { label: "F3", cmd: "CD .." },
-      { label: "F4", cmd: "TYPE README.TXT" },
+      { label: "F4", cmd: "__RUNMODE__" },
       { label: "F5", cmd: "HELP" },
-    ],
-    []
-  );
+    ];
+  }, [runMode, runPage, exeList]);
 
   const typeCommand = useCallback(
     (c: string) => {
@@ -571,6 +608,38 @@ export default function Console({ newGame, runGame }: ConsoleProps): JSX.Element
       submit();
     },
     [promptActive, setLine, submit]
+  );
+
+  const handleChip = useCallback(
+    (cmd: string) => {
+      if (!promptActive) return;
+      if (runMode) {
+        if (cmd === "__MORE__") {
+          const pageSize = 4;
+          const totalPages = Math.ceil(exeList.length / pageSize) || 1;
+          setRunPage((p) => (p + 1) % totalPages);
+        } else if (cmd) {
+          setRunMode(false);
+          setRunPage(0);
+          setLine(`RUN ${cmd}`);
+          submit();
+        }
+        return;
+      }
+      if (cmd === "__RUNMODE__") {
+        const here = nodeAtPath(cwd) as Record<string, FSNode>;
+        const exes = Object.keys(here || {})
+          .filter((k) => k.toUpperCase().endsWith(".EXE"))
+          .map((k) => k.replace(/\.EXE$/i, ""));
+        setExeList(exes);
+        setRunMode(true);
+        setRunPage(0);
+        setLine("RUN ");
+        return;
+      }
+      if (cmd) typeCommand(cmd);
+    },
+    [promptActive, runMode, exeList, nodeAtPath, cwd, setLine, submit, typeCommand]
   );
 
   // ---------- Physical keyboard ----------
@@ -730,31 +799,22 @@ export default function Console({ newGame, runGame }: ConsoleProps): JSX.Element
             <ConsoleScreen>{renderWithCursor}</ConsoleScreen>
           </div>
           <div className="function-keys">
-            <span>
-              <b className="f-num">1</b>DIR
-            </span>
-            <span>
-              <b className="f-num">2</b>CLS
-            </span>
-            <span>
-              <b className="f-num">3</b>CD..
-            </span>
-            <span>
-              <b className="f-num">4</b>README
-            </span>
-            <span>
-              <b className="f-num">5</b>HELP
-            </span>
+            {fKeyLabels.map((lbl, i) => (
+              <span key={i}>
+                <b className="f-num">{i + 1}</b>
+                {lbl}
+              </span>
+            ))}
           </div>
           <div className="glass" />
           <div className="vignette" />
           <div className="status">POWER {powerOn ? "◉" : "○"}</div>
         </div>
 
-        <div className="kb">
+          <div className="kb">
           <div className="bar">
-            {chipCommands.map((c) => (
-              <button key={c.label} className="chip" onClick={() => (c.cmd === "REBOOT" ? newGame() : typeCommand(c.cmd))}>
+            {chipCommands.map((c, i) => (
+              <button key={i} className="chip" onClick={() => handleChip(c.cmd)}>
                 {c.label}
               </button>
             ))}
