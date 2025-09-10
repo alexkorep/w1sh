@@ -622,6 +622,23 @@ export default function Console({ newGame, runGame }: ConsoleProps): JSX.Element
     ];
   }, [chipMode, exeList, exePage, runCommand, startRunMode, exitRunMode, setLine]);
 
+  // Auto-submit when a full RUN <APP> command is entered
+  useEffect(() => {
+    if (!promptActive) return;
+    const m = /^RUN\s+(.+)$/.exec(lineBuffer.trim());
+    if (!m) return;
+    const prog = m[1].toUpperCase();
+    const keyExe = prog + ".EXE";
+    const here = nodeAtPath(cwd) as Record<string, FSNode>;
+    const games = nodeAtPath(["C:", "GAMES"]) as Record<string, FSNode>;
+    if (
+      (here && here[keyExe] && here[keyExe].type === "app") ||
+      (games && games[keyExe] && games[keyExe].type === "app")
+    ) {
+      submit();
+    }
+  }, [lineBuffer, promptActive, cwd, nodeAtPath, submit]);
+
   // ---------- Physical keyboard ----------
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -788,7 +805,7 @@ export default function Console({ newGame, runGame }: ConsoleProps): JSX.Element
           <div className="function-keys">
             {chipCommands.map((c, i) => (
               <span key={i}>
-                <b className="f-num">{i + 1}</b>
+                <b className="f-num">{`F${i + 1}`}</b>
                 {c.text}
               </span>
             ))}
@@ -802,7 +819,7 @@ export default function Console({ newGame, runGame }: ConsoleProps): JSX.Element
           <div className="bar">
             {chipCommands.map((c, i) => (
               <button key={i} className="chip" onClick={c.onPress} disabled={!c.text}>
-                {c.text || ""}
+                {`F${i + 1}`}
               </button>
             ))}
           </div>
