@@ -5,16 +5,25 @@ import ConsoleScreen from "../components/ConsoleScreen";
 import CommandChips from "../components/CommandChips";
 import VirtualKeyboard from "../components/VirtualKeyboard";
 import { useAudio } from "../hooks/useAudio";
-import { useDosShell, FSNode } from "../hooks/useDosShell";
-import { useChipCommands, ChipCommand } from "../hooks/useChipCommands";
+import { useDosShell } from "../hooks/useDosShell";
+import { useChipCommands } from "../hooks/useChipCommands";
+import Pinball from "./Pinball";
 
 interface ConsoleProps {
   newGame: () => void;
   runGame: (page: Page) => void;
 }
 
-export default function Console({ newGame, runGame }: ConsoleProps): JSX.Element {
+export default function Console({ newGame, runGame: runPage }: ConsoleProps): JSX.Element {
   const { initAudio, beep } = useAudio();
+  const [activeGame, setActiveGame] = useState<null | "pinball">(null);
+  const handleRunGame = useCallback(
+    (page: Page) => {
+      if (page === "pinball") setActiveGame("pinball");
+      else runPage(page);
+    },
+    [runPage]
+  );
   const {
     renderWithCursor,
     lineBuffer,
@@ -28,7 +37,8 @@ export default function Console({ newGame, runGame }: ConsoleProps): JSX.Element
     backspace,
     upHistory,
     downHistory,
-  } = useDosShell(runGame, beep, initAudio);
+    startPrompt,
+  } = useDosShell(handleRunGame, beep, initAudio);
 
   const [powerOn, setPowerOn] = useState<boolean>(true);
 
@@ -56,6 +66,7 @@ export default function Console({ newGame, runGame }: ConsoleProps): JSX.Element
 
   // ---------- Physical keyboard ----------
   useEffect(() => {
+    if (activeGame) return;
     const onKey = (e: KeyboardEvent) => {
       if (e.metaKey || e.ctrlKey) return;
       const fIdx = /^F([1-5])$/.exec(e.key);
@@ -88,7 +99,7 @@ export default function Console({ newGame, runGame }: ConsoleProps): JSX.Element
     };
     window.addEventListener("keydown", onKey, { passive: false });
     return () => window.removeEventListener("keydown", onKey as any);
-  }, [backspace, submit, upHistory, downHistory, handleChar, chipCommands]);
+  }, [activeGame, backspace, submit, upHistory, downHistory, handleChar, chipCommands]);
 
   // ---------- Boot sequence ----------
   useEffect(() => {
@@ -188,32 +199,47 @@ export default function Console({ newGame, runGame }: ConsoleProps): JSX.Element
       <div className="wrap">
         <div className="crt">
           <div className="inner">
-            <ConsoleScreen>{renderWithCursor}</ConsoleScreen>
+            {activeGame === "pinball" ? (
+              <Pinball
+                onExit={() => {
+                  setActiveGame(null);
+                  startPrompt();
+                }}
+              />
+            ) : (
+              <ConsoleScreen>{renderWithCursor}</ConsoleScreen>
+            )}
           </div>
-          <div className="function-keys">
-            {chipCommands.map((c, i) => (
-              <span key={i}>
-                <b className="f-num">{`F${i + 1}`}</b>
-                {c.text}
-              </span>
-            ))}
-          </div>
+          {!activeGame && (
+            <div className="function-keys">
+              {chipCommands.map((c, i) => (
+                <span key={i}>
+                  <b className="f-num">{`F${i + 1}`}</b>
+                  {c.text}
+                </span>
+              ))}
+            </div>
+          )}
           <div className="glass" />
           <div className="vignette" />
           <div className="status">POWER {powerOn ? "◉" : "○"}</div>
         </div>
 
         <div className="kb">
-          <CommandChips chipCommands={chipCommands} />
+          {!activeGame && (
+            <>
+              <CommandChips chipCommands={chipCommands} />
 
-          <VirtualKeyboard
-            onChar={handleChar}
-            onBackspace={backspace}
-            onEnter={submit}
-            onUp={upHistory}
-            onDown={downHistory}
-            initAudio={initAudio}
-          />
+              <VirtualKeyboard
+                onChar={handleChar}
+                onBackspace={backspace}
+                onEnter={submit}
+                onUp={upHistory}
+                onDown={downHistory}
+                initAudio={initAudio}
+              />
+            </>
+          )}
         </div>
       </div>
     </>

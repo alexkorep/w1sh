@@ -61,7 +61,7 @@ function App() {
       ) : page === "elite" ? (
         <Elite />
       ) : page === "pinball" ? (
-        <Pinball setPage={setPage} />
+        <Pinball onExit={() => setPage("console")} />
       ) : (
         <Console newGame={newGame} runGame={setPage} />
       )}
