@@ -1,5 +1,5 @@
 // @ts-nocheck
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useMemo } from "react";
 import type { Page } from "../hooks/useGameState";
 import ConsoleScreen from "../components/ConsoleScreen";
 import CommandChips from "../components/CommandChips";
@@ -63,6 +63,23 @@ export default function Console({ newGame, runGame: runPage }: ConsoleProps): JS
     setLine,
     runCommand,
   });
+
+  const pinballChipCommands = useMemo(
+    () => [
+      { text: "", onPress: () => {} },
+      { text: "", onPress: () => {} },
+      { text: "", onPress: () => {} },
+      { text: "", onPress: () => {} },
+      {
+        text: "EXIT",
+        onPress: () => {
+          setActiveGame(null);
+          startPrompt();
+        },
+      },
+    ],
+    [startPrompt]
+  );
 
   // ---------- Physical keyboard ----------
   useEffect(() => {
@@ -157,6 +174,10 @@ export default function Console({ newGame, runGame: runPage }: ConsoleProps): JS
   .chip{ background:linear-gradient(180deg, #555, #444); color:#dcdcdc; border:1px solid #333; border-bottom-color:#222; border-radius:6px; padding:8px 0; font-weight:normal; letter-spacing:.6px; box-shadow:0 3px 0 #2a2a2a, 0 0 0 2px #202020 inset; text-transform:uppercase; user-select:none; touch-action:manipulation; -webkit-tap-highlight-color:transparent; cursor:pointer; text-align:center; }
   .chip:active{ transform:translateY(1px); box-shadow:0 2px 0 #2a2a2a, 0 0 0 2px #202020 inset; }
 
+  .pinball-overlay{ position:fixed; inset:0; background:#0b0f1a; display:flex; flex-direction:column; z-index:999; }
+  .pinball-overlay .pinball-area{ flex:1 1 auto; }
+  .pinball-overlay .bar{ margin:8px; }
+
   /* --- Keyboard --- */
   .rows{ display:flex; flex-direction:column; gap:6px; flex:1; }
   .row{ display:flex; gap:6px; justify-content:center; }
@@ -196,19 +217,23 @@ export default function Console({ newGame, runGame: runPage }: ConsoleProps): JS
   return (
     <>
       <style>{css}</style>
+      {activeGame === "pinball" && (
+        <div className="pinball-overlay">
+          <div className="pinball-area">
+            <Pinball
+              onExit={() => {
+                setActiveGame(null);
+                startPrompt();
+              }}
+            />
+          </div>
+          <CommandChips chipCommands={pinballChipCommands} />
+        </div>
+      )}
       <div className="wrap">
         <div className="crt">
           <div className="inner">
-            {activeGame === "pinball" ? (
-              <Pinball
-                onExit={() => {
-                  setActiveGame(null);
-                  startPrompt();
-                }}
-              />
-            ) : (
-              <ConsoleScreen>{renderWithCursor}</ConsoleScreen>
-            )}
+            <ConsoleScreen>{renderWithCursor}</ConsoleScreen>
           </div>
           {!activeGame && (
             <div className="function-keys">
