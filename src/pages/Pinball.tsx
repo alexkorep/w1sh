@@ -179,45 +179,56 @@ html,
           }
           integrate(dt) {
             const g = 1800;
-            this.vy += g * dt;
-            const drag = Math.pow(0.995, dt * 60);
-            this.vx *= drag;
-            this.vy *= drag;
-            this.x += this.vx * dt;
-            this.y += this.vy * dt;
+            // Break movement into smaller steps to avoid tunneling at high speed
+            const speed = Math.hypot(this.vx, this.vy);
+            const maxStep = this.r * 0.5;
+            const steps = Math.max(1, Math.ceil((speed * dt) / maxStep));
+            const subDt = dt / steps;
 
-            for (const w of walls)
-              collideBallSegment(this, w.x1, w.y1, w.x2, w.y2, 0.0, 0.62);
-            for (const f of flippers) f.collideBall(this);
+            for (let i = 0; i < steps; i++) {
+              this.vy += g * subDt;
+              const drag = Math.pow(0.995, subDt * 60);
+              this.vx *= drag;
+              this.vy *= drag;
+              this.x += this.vx * subDt;
+              this.y += this.vy * subDt;
 
-            for (const b of bumpers) {
-              const dx = this.x - b.x,
-                dy = this.y - b.y;
-              const d2 = len2(dx, dy),
-                rr = (this.r + b.r) * (this.r + b.r);
-              if (d2 < rr) {
-                const d = Math.sqrt(d2) || 1;
-                const nx = dx / d,
-                  ny = dy / d;
-                const pen = this.r + b.r - d;
-                this.x += nx * pen;
-                this.y += ny * pen;
-                const vn = this.vx * nx + this.vy * ny;
-                const restitution = 1.15;
-                this.vx -= (1 + restitution) * vn * nx;
-                this.vy -= (1 + restitution) * vn * ny;
-                const base = bumperScoreForRadius(b.r);
-                const mult = bumperHeightMultiplier(b.y);
-                const points = Math.max(1, Math.round(base * mult));
-                setScore((s) => s + points);
-                b.pulse = 1;
-                spawnSparks(this.x, this.y, 10);
-                spawnScoreDigits(b.x, b.y - b.r * 0.25, points);
-                // Trigger a brief board shake proportional to bumper size
-                addShake(Math.min(12, 0.45 * b.r), 0.14);
+              for (const w of walls)
+                collideBallSegment(this, w.x1, w.y1, w.x2, w.y2, 0.0, 0.62);
+              for (const f of flippers) f.collideBall(this);
+
+              for (const b of bumpers) {
+                const dx = this.x - b.x,
+                  dy = this.y - b.y;
+                const d2 = len2(dx, dy),
+                  rr = (this.r + b.r) * (this.r + b.r);
+                if (d2 < rr) {
+                  const d = Math.sqrt(d2) || 1;
+                  const nx = dx / d,
+                    ny = dy / d;
+                  const pen = this.r + b.r - d;
+                  this.x += nx * pen;
+                  this.y += ny * pen;
+                  const vn = this.vx * nx + this.vy * ny;
+                  const restitution = 1.15;
+                  this.vx -= (1 + restitution) * vn * nx;
+                  this.vy -= (1 + restitution) * vn * ny;
+                  const base = bumperScoreForRadius(b.r);
+                  const mult = bumperHeightMultiplier(b.y);
+                  const points = Math.max(1, Math.round(base * mult));
+                  setScore((s) => s + points);
+                  b.pulse = 1;
+                  spawnSparks(this.x, this.y, 10);
+                  spawnScoreDigits(b.x, b.y - b.r * 0.25, points);
+                  // Trigger a brief board shake proportional to bumper size
+                  addShake(Math.min(12, 0.45 * b.r), 0.14);
+                }
+              }
+              if (this.y - this.r > H + 100) {
+                this.reset();
+                return;
               }
             }
-            if (this.y - this.r > H + 100) this.reset();
           }
           reset() {
             this.x = ballInitX;
