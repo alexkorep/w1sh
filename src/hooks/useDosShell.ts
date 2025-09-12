@@ -461,6 +461,7 @@ export function useDosShell(
     cwd,
     nodeAtPath,
     boot,
+    startPrompt,
     submit,
     setLine,
     handleChar,

@@ -1,17 +1,14 @@
 // @ts-nocheck
 import { useEffect, useRef, useState } from "react";
-import useGameState from "../hooks/useGameState";
 
-import type { Page } from "../hooks/useGameState";
-
-export default function Pinball({ setPage }: { setPage: (page: Page) => void }): JSX.Element {
-  const handleExit = () => setPage("console");
+export default function Pinball({ onExit }: { onExit: () => void }): JSX.Element {
+  const handleExit = onExit;
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [score, setScore] = useState(0);
   const css = `
-html,
-      body {
-        margin: 0;
+  .pinball-container {
+        position: relative;
+        width: 100%;
         height: 100%;
         background: #0b0f1a;
         overflow: hidden;
@@ -22,8 +19,8 @@ html,
           sans-serif;
         color: #e6edf3;
       }
-      #ui {
-        position: fixed;
+      .pinball-container #ui {
+        position: absolute;
         inset: 0;
         pointer-events: none;
         display: flex;
@@ -31,7 +28,7 @@ html,
         justify-content: space-between;
         padding: 10px;
       }
-      .panel {
+      .pinball-container .panel {
         background: rgba(0, 0, 0, 0.25);
         backdrop-filter: blur(4px);
         border: 1px solid rgba(255, 255, 255, 0.08);
@@ -40,8 +37,8 @@ html,
         font-weight: 600;
         text-shadow: 0 1px 0 rgba(0, 0, 0, 0.5);
       }
-      #hint {
-        position: fixed;
+      .pinball-container #hint {
+        position: absolute;
         left: 50%;
         transform: translateX(-50%);
         bottom: 10px;
@@ -54,16 +51,16 @@ html,
         padding: 6px 10px;
         border-radius: 10px;
       }
-      canvas {
+      .pinball-container canvas {
         display: block;
         /* Centered fixed-size canvas; JS sets exact size to keep 1:2 portrait ratio */
-        position: fixed;
+        position: absolute;
         left: 50%;
         top: 50%;
         transform: translate(-50%, -50%);
       }
-      #exit-btn {
-        position: fixed;
+      .pinball-container #exit-btn {
+        position: absolute;
         bottom: 10px;
         right: 10px;
         pointer-events: auto;
@@ -77,7 +74,7 @@ html,
         box-shadow: 0 2px 8px rgba(0,0,0,0.12);
         transition: background 0.2s;
       }
-      #exit-btn:hover {
+      .pinball-container #exit-btn:hover {
         background: #16a34a;
       }
   `;
@@ -642,8 +639,9 @@ html,
 
         function resize() {
           DPR = Math.max(1, Math.min(2, window.devicePixelRatio || 1));
-          const vw = Math.floor(window.innerWidth);
-          const vh = Math.floor(window.innerHeight);
+          const parent = canvas.parentElement;
+          const vw = Math.floor(parent?.clientWidth || window.innerWidth);
+          const vh = Math.floor(parent?.clientHeight || window.innerHeight);
           const targetAspect = 1 / 2; // width:height = 1:2 portrait
           let w, h;
           if (vw / vh > targetAspect) {
@@ -842,7 +840,7 @@ html,
   }, []);
 
   return (
-    <div>
+    <div className="pinball-container">
       <style>{css}</style>
       <canvas id="c" ref={canvasRef}></canvas>
       <button id="exit-btn" className="panel" onClick={handleExit}>
