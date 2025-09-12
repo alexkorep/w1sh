@@ -1,8 +1,7 @@
 // @ts-nocheck
 import { useEffect, useRef, useState } from "react";
 
-export default function Pinball({ onExit }: { onExit: () => void }): JSX.Element {
-  const handleExit = onExit;
+export default function Pinball({ onExit: _onExit }: { onExit: () => void }): JSX.Element {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [score, setScore] = useState(0);
   const css = `
@@ -58,24 +57,6 @@ export default function Pinball({ onExit }: { onExit: () => void }): JSX.Element
         left: 50%;
         top: 50%;
         transform: translate(-50%, -50%);
-      }
-      .pinball-container #exit-btn {
-        position: absolute;
-        bottom: 10px;
-        right: 10px;
-        pointer-events: auto;
-        cursor: pointer;
-        background: #22c55e;
-        color: white;
-        border: none;
-        border-radius: 6px;
-        padding: 10px 20px;
-        font-weight: bold;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.12);
-        transition: background 0.2s;
-      }
-      .pinball-container #exit-btn:hover {
-        background: #16a34a;
       }
   `;
 
@@ -843,14 +824,11 @@ export default function Pinball({ onExit }: { onExit: () => void }): JSX.Element
     <div className="pinball-container">
       <style>{css}</style>
       <canvas id="c" ref={canvasRef}></canvas>
-      <button id="exit-btn" className="panel" onClick={handleExit}>
-        Exit
-      </button>
       <div id="ui">
         <div className="panel" id="score">Score: {score}</div>
         <div className="panel" id="balls">Balls: ∞</div>
       </div>
-      <div id="hint">Tap left/right to flip • Higher bumpers pay up to 1000x</div>
+      <div id="hint">Tap left/right to flip • Higher bumpers pay up to 1000x • F5 Exit</div>
     </div>
   );
 }
