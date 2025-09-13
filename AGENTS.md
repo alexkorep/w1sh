@@ -66,5 +66,6 @@ Provide concise, surgical help adding narrative screens, DOS shell commands, vir
 - Dev: `yarn dev`
 - Build: `yarn build`
 - Preview: `yarn preview`
+- Tests: `yarn test`
 
 Keep changes atomic; submit diffs only for touched regions. Ask before broad structural shifts.
