@@ -92,7 +92,7 @@ export default function TitleScreen({ onBoot }: TitleScreenProps): JSX.Element {
     color: #00ff41;
     background: none;
     border: none;
-    font-size: 5vw;
+    font-size: calc(min(100vw, 100vh * 9 / 16) * 0.05);
     padding: 0.5rem 1rem;
     margin: 0.5rem 0;
     transition: all 0.2s ease-in-out;
@@ -117,11 +117,6 @@ export default function TitleScreen({ onBoot }: TitleScreenProps): JSX.Element {
     opacity: 1;
   }
 
-  @media (min-width: 768px) {
-    .boot-button {
-      font-size: 2rem;
-    }
-  }
   `;
 
   return (
