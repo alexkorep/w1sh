@@ -11,17 +11,21 @@ export function canWinByOuterMove(
   const dx = x < 1 ? 1 : x > 3 ? -1 : 0;
   const dy = y < 1 ? 1 : y > 3 ? -1 : 0;
 
-  const step2x = x + 2 * dx;
-  const step2y = y + 2 * dy;
-  const step3x = x + 3 * dx;
-  const step3y = y + 3 * dy;
+  // must actually be on the border
+  if (dx === 0 && dy === 0) return false;
 
   const inside = (sx: number, sy: number) =>
     sx >= 1 && sx <= 3 && sy >= 1 && sy <= 3;
-  if (inside(step2x, step2y) && inside(step3x, step3y)) {
-    const idx2 = (step2y - 1) * 3 + (step2x - 1);
-    const idx3 = (step3y - 1) * 3 + (step3x - 1);
-    return board[idx2] === player && board[idx3] === player;
+
+  const s1x = x + dx,
+    s1y = y + dy;
+  const s2x = x + 2 * dx,
+    s2y = y + 2 * dy;
+
+  if (inside(s1x, s1y) && inside(s2x, s2y)) {
+    const idx1 = (s1y - 1) * 3 + (s1x - 1);
+    const idx2 = (s2y - 1) * 3 + (s2x - 1);
+    return board[idx1] === player && board[idx2] === player;
   }
   return false;
 }
