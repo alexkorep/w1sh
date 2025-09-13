@@ -35,6 +35,7 @@ export function useDosShell(
         ),
         "ELITE.EXE": app("ELITE", "elite"),
         "PINBALL.EXE": app("PINBALL", "pinball"),
+        "TICTACTO.EXE": app("TIC-TAC-TOE", "tictactoe"),
         NOTES: dir({
           "TODO.TXT": file(
             "- Finish the space trader prototype\r\n- Record DOS simulator demo\r\n- Buy floppies (just kidding)\r\n"
@@ -364,6 +365,10 @@ export function useDosShell(
           return;
         case "PINBALL":
           runGame("pinball");
+          return;
+        case "TICTACTO":
+        case "TICTACTOE":
+          runGame("tictactoe");
           return;
         case "BEEP":
           initAudio();
