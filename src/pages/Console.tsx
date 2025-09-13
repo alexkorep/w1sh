@@ -126,20 +126,18 @@ export default function Console({ newGame, runGame: runPage }: ConsoleProps): JS
 
   // ---------- Styles (unchanged from your CSS) ----------
   const css = `
-  :root{
+  .console-page{
     --screen-bg:#001400;
     --phosphor:#00ff80;
     --phosphor-dim:#00b060;
     --bezel:#1a1a1a; --bezel-edge:#0a0a0a; --accent:#4dd17a;
     --btn:#151a16; --btn-edge:#0d100e; --btn-text:#d9ffe6;
     --led-off:#6b5f16; --led-on:#ffd84a;
-  }
-  html, body { height:100%; }
-  body{
     margin:0; background:#53524f; color:#d9ffe6; font:14px/1.4 ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
     display:flex; flex-direction:column; gap:8px;
+    width:100%; height:100%;
   }
-  .wrap{ display:flex; flex-direction:column; width:100%; height:100%; }
+  .console-page .wrap{ display:flex; flex-direction:column; width:100%; height:100%; }
 
   /* --- CRT Screen --- */
   .crt{
@@ -217,7 +215,7 @@ export default function Console({ newGame, runGame: runPage }: ConsoleProps): JS
   `;
 
   return (
-    <>
+    <div className="console-page">
       <style>{css}</style>
       {activeGame === "pinball" && (
         <div className="pinball-overlay">
@@ -283,6 +281,6 @@ export default function Console({ newGame, runGame: runPage }: ConsoleProps): JS
           )}
         </div>
       </div>
-    </>
+    </div>
   );
 }

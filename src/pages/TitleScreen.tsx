@@ -12,26 +12,18 @@ export default function TitleScreen({ onBoot }: TitleScreenProps): JSX.Element {
   const css = `
   @import url('https://fonts.googleapis.com/css2?family=VT323&display=swap');
 
-  * {
+  .terminal-container,
+  .terminal-container * {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
   }
 
-  html, body {
-    height: 100%;
-    width: 100%;
-    overflow: hidden;
-  }
-
-  body {
+  .terminal-container {
     background-color: #050a05;
     color: #00ff41;
     font-family: 'VT323', monospace;
     text-transform: uppercase;
-  }
-
-  .terminal-container {
     display: flex;
     flex-direction: column;
     justify-content: center;
@@ -40,6 +32,7 @@ export default function TitleScreen({ onBoot }: TitleScreenProps): JSX.Element {
     height: 100%;
     padding: 20px;
     position: relative;
+    overflow: hidden;
   }
 
   .terminal-container::before {
