@@ -1,5 +1,102 @@
 import { useEffect } from "react";
 
+// --- AI MOVE SELECTION LOGIC (exported for unit tests) ---
+// Returns the best move index (0..8) for the computer given the current board.
+// If no moves available (board full) returns -1.
+export function bestComputerMove(
+  board: string[],
+  player: string = "O",
+  computer: string = "X"
+): number {
+  function getAvailableMoves(b: string[]) {
+    return b
+      .map((cell, index) => (cell === "" ? index : null))
+      .filter((v): v is number => v !== null);
+  }
+
+  const winningConditions = [
+    [0, 1, 2],
+    [3, 4, 5],
+    [6, 7, 8],
+    [0, 3, 6],
+    [1, 4, 7],
+    [2, 5, 8],
+    [0, 4, 8],
+    [2, 4, 6],
+  ];
+
+  function checkWinner(currentBoard: string[], mark: string) {
+    return winningConditions.some((condition) =>
+      condition.every((index) => currentBoard[index] === mark)
+    );
+  }
+
+  type MinimaxResult = { score: number; index?: number };
+
+  function minimax(newBoard: string[], currentMark: string): MinimaxResult {
+    const availableMoves = getAvailableMoves(newBoard);
+    if (checkWinner(newBoard, player)) return { score: -10 };
+    if (checkWinner(newBoard, computer)) return { score: 10 };
+    if (availableMoves.length === 0) return { score: 0 };
+
+    const moves: MinimaxResult[] = [];
+    for (let i = 0; i < availableMoves.length; i++) {
+      const idx = availableMoves[i];
+      const move: MinimaxResult = { index: idx, score: 0 };
+      newBoard[idx] = currentMark;
+      move.score = minimax(newBoard, currentMark === computer ? player : computer).score;
+      newBoard[idx] = "";
+      moves.push(move);
+    }
+
+    let bestMove = 0;
+    if (currentMark === computer) {
+      let bestScore = -Infinity;
+      moves.forEach((m, i) => {
+        if (m.score > bestScore) {
+          bestScore = m.score;
+          bestMove = i;
+        }
+      });
+    } else {
+      let bestScore = Infinity;
+      moves.forEach((m, i) => {
+        if (m.score < bestScore) {
+          bestScore = m.score;
+          bestMove = i;
+        }
+      });
+    }
+    return moves[bestMove];
+  }
+
+  const avail = board.some((c) => c === "");
+  if (!avail) return -1;
+  const availableMoves = getAvailableMoves(board);
+
+  // 1. Immediate winning move for computer
+  for (const m of availableMoves) {
+    board[m] = computer;
+    const win = checkWinner(board, computer);
+    board[m] = "";
+    if (win) return m;
+  }
+
+  // 2. Block opponent immediate win
+  for (const m of availableMoves) {
+    board[m] = player;
+    const oppWin = checkWinner(board, player);
+    board[m] = "";
+    if (oppWin) return m;
+  }
+
+  // 3. Take center if free (classic optimal strategy)
+  if (board[4] === "") return 4;
+
+  const result = minimax([...board], computer);
+  return result.index ?? -1;
+}
+
 export function canWinByOuterMove(
   index5x5: number,
   board: string[],
@@ -80,48 +177,7 @@ export default function TicTacToe({
         .filter((val): val is number => val !== null);
     }
 
-    function minimax(newBoard: string[], currentMark: string): any {
-      const availableMoves = getAvailableMoves(newBoard);
-      if (checkWinner(newBoard, player)) return { score: -10 };
-      if (checkWinner(newBoard, computer)) return { score: 10 };
-      if (availableMoves.length === 0) return { score: 0 };
-
-      const moves: any[] = [];
-      for (let i = 0; i < availableMoves.length; i++) {
-        const move: any = {};
-        const index = availableMoves[i];
-        move.index = index;
-        newBoard[index] = currentMark;
-
-        if (currentMark === computer) {
-          move.score = minimax(newBoard, player).score;
-        } else {
-          move.score = minimax(newBoard, computer).score;
-        }
-        newBoard[index] = "";
-        moves.push(move);
-      }
-
-      let bestMove = 0;
-      if (currentMark === computer) {
-        let bestScore = -10000;
-        moves.forEach((move, i) => {
-          if (move.score > bestScore) {
-            bestScore = move.score;
-            bestMove = i;
-          }
-        });
-      } else {
-        let bestScore = 10000;
-        moves.forEach((move, i) => {
-          if (move.score < bestScore) {
-            bestScore = move.score;
-            bestMove = i;
-          }
-        });
-      }
-      return moves[bestMove];
-    }
+    // (legacy helpers retained for in-component logic)
 
     function updateBoard(index3x3: number, mark: string) {
       board[index3x3] = mark;
@@ -159,8 +215,8 @@ export default function TicTacToe({
       document.body.style.pointerEvents = "none";
 
       setTimeout(() => {
-        const bestMove = minimax(board, computer);
-        updateBoard(bestMove.index, computer);
+        const moveIndex = bestComputerMove(board, player, computer);
+        if (moveIndex >= 0) updateBoard(moveIndex, computer);
         if (checkResult()) return;
         statusMessage.textContent = "YOUR TURN (O)";
         document.body.style.pointerEvents = "auto";

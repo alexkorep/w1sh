@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { canWinByOuterMove } from "./TicTacToe";
+import { canWinByOuterMove, bestComputerMove } from "./TicTacToe";
 
 describe("canWinByOuterMove", () => {
   it("returns true for a winning move at the top-right outer corner", () => {
@@ -38,5 +38,34 @@ describe("canWinByOuterMove", () => {
     outerCells.forEach((i) =>
       expect(canWinByOuterMove(i, board, "O")).toBe(false)
     );
+  });
+});
+
+describe("bestComputerMove", () => {
+  it("takes immediate winning move when available", () => {
+    // X to play and can win on top row
+    const board = ["X", "X", "", "O", "O", "", "", "", ""];
+    const move = bestComputerMove(board, "O", "X");
+    expect(move).toBe(2); // complete row 0,1,2
+  });
+
+  it("blocks opponent's winning move", () => {
+    // O threatens winning bottom row; X must block at index 8
+    const board = ["X", "", "", "X", "", "", "O", "O", ""];
+    const move = bestComputerMove(board, "O", "X");
+    expect(move).toBe(8);
+  });
+
+  it("prefers center early if no immediate tactics", () => {
+    const board = ["X", "", "", "", "", "", "", "", ""]; // only one X corner
+    const move = bestComputerMove(board, "O", "X");
+    // Optimal perfect play: take center (4)
+    expect(move).toBe(4);
+  });
+
+  it("returns -1 on full board", () => {
+    const board = ["X", "O", "X", "X", "O", "O", "O", "X", "X"]; // full
+    const move = bestComputerMove(board, "O", "X");
+    expect(move).toBe(-1);
   });
 });
