@@ -9,14 +9,14 @@ export default function Pinball({ onExit: _onExit }: { onExit: () => void }): JS
         position: relative;
         width: 100%;
         height: 100%;
-        background: #0b0f1a;
+        background: #000000;
         overflow: hidden;
         touch-action: none;
         -webkit-user-select: none;
         user-select: none;
         font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial,
           sans-serif;
-        color: #e6edf3;
+        color: #00ffff;
       }
       .pinball-container #ui {
         position: absolute;
@@ -239,8 +239,8 @@ export default function Pinball({ onExit: _onExit }: { onExit: () => void }): JS
               this.y,
               this.r
             );
-            grd.addColorStop(0, "#fafcff");
-            grd.addColorStop(1, "#9aa4b4");
+              grd.addColorStop(0, "#ffffff");
+              grd.addColorStop(1, "#aaaaaa");
             ctx.fillStyle = grd;
             ctx.beginPath();
             ctx.arc(this.x, this.y, this.r, 0, Math.PI * 2);
@@ -356,10 +356,10 @@ export default function Pinball({ onExit: _onExit }: { onExit: () => void }): JS
               Math.atan2(ny, nx),
               true
             );
-            const grad = ctx.createLinearGradient(this.px, this.py, ex, ey);
-            grad.addColorStop(0, this.isLeft ? "#ff3366" : "#4dd0ff");
-            grad.addColorStop(1, "#ffffff");
-            ctx.fillStyle = grad;
+              const grad = ctx.createLinearGradient(this.px, this.py, ex, ey);
+              grad.addColorStop(0, this.isLeft ? "#ff00ff" : "#00ffff");
+              grad.addColorStop(1, "#ffffff");
+              ctx.fillStyle = grad;
             ctx.fill();
 
             ctx.beginPath();
@@ -426,8 +426,8 @@ export default function Pinball({ onExit: _onExit }: { onExit: () => void }): JS
           for (const p of particles) {
             ctx.globalAlpha = Math.max(0, p.life * 3);
             ctx.beginPath();
-            ctx.arc(p.x, p.y, 2, 0, Math.PI * 2);
-            ctx.fillStyle = "#ffd166";
+              ctx.arc(p.x, p.y, 2, 0, Math.PI * 2);
+              ctx.fillStyle = "#00ffff";
             ctx.fill();
           }
           ctx.restore();
@@ -468,9 +468,9 @@ export default function Pinball({ onExit: _onExit }: { onExit: () => void }): JS
             ctx.globalAlpha = alpha;
             ctx.font = `800 ${size}px system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif`;
             // soft glow for readability
-            ctx.shadowColor = "rgba(0,0,0,0.6)";
-            ctx.shadowBlur = 8;
-            ctx.fillStyle = "#ffd166";
+              ctx.shadowColor = "rgba(0,0,0,0.6)";
+              ctx.shadowBlur = 8;
+              ctx.fillStyle = "#ff00ff";
             ctx.fillText(d.text ?? "", d.x, d.y);
           }
           ctx.restore();
@@ -573,10 +573,10 @@ export default function Pinball({ onExit: _onExit }: { onExit: () => void }): JS
         }
 
         function drawPlayfield() {
-          const g = ctx.createLinearGradient(0, 0, 0, H);
-          g.addColorStop(0, "#0f1a2e");
-          g.addColorStop(1, "#06111f");
-          ctx.fillStyle = g;
+            const g = ctx.createLinearGradient(0, 0, 0, H);
+            g.addColorStop(0, "#0000aa");
+            g.addColorStop(1, "#000000");
+            ctx.fillStyle = g;
           // Background for full world; outer draw() clips to viewport
           ctx.fillRect(0, 0, W, H);
 
@@ -598,23 +598,23 @@ export default function Pinball({ onExit: _onExit }: { onExit: () => void }): JS
           for (const b of bumpers) {
             const r = b.r,
               halo = r * (1 + b.pulse * 0.7);
-            ctx.beginPath();
-            ctx.arc(b.x, b.y, halo, 0, Math.PI * 2);
-            ctx.fillStyle = "rgba(255, 213, 102, 0.10)";
-            ctx.fill();
+              ctx.beginPath();
+              ctx.arc(b.x, b.y, halo, 0, Math.PI * 2);
+              ctx.fillStyle = "rgba(255, 0, 255, 0.10)";
+              ctx.fill();
 
             ctx.beginPath();
             ctx.arc(b.x, b.y, r, 0, Math.PI * 2);
-            const rg = ctx.createRadialGradient(b.x, b.y, r * 0.2, b.x, b.y, r);
-            rg.addColorStop(0, "#ffd166");
-            rg.addColorStop(1, "#e65100");
-            ctx.fillStyle = rg;
-            ctx.fill();
+              const rg = ctx.createRadialGradient(b.x, b.y, r * 0.2, b.x, b.y, r);
+              rg.addColorStop(0, "#ff00ff");
+              rg.addColorStop(1, "#aa00aa");
+              ctx.fillStyle = rg;
+              ctx.fill();
 
-            ctx.beginPath();
-            ctx.arc(b.x, b.y, r * 0.25, 0, Math.PI * 2);
-            ctx.fillStyle = "#222";
-            ctx.fill();
+              ctx.beginPath();
+              ctx.arc(b.x, b.y, r * 0.25, 0, Math.PI * 2);
+              ctx.fillStyle = "#000000";
+              ctx.fill();
           }
         }
 
