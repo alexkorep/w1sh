@@ -63,8 +63,8 @@ Provide concise, surgical help adding narrative screens, DOS shell commands, vir
 - Writing animations that append indefinitely → memory growth.
 
 ## Quick Reference
-- Dev: `npm run dev`
-- Build: `npm run build`
-- Preview: `npm run preview`
+- Dev: `yarn dev`
+- Build: `yarn build`
+- Preview: `yarn preview`
 
 Keep changes atomic; submit diffs only for touched regions. Ask before broad structural shifts.
