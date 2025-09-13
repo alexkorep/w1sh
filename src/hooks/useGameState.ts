@@ -7,7 +7,8 @@ export type Page =
   | "title"
   | "console"
   | "elite"
-  | "pinball";
+  | "pinball"
+  | "tictactoe";
 
 interface GameState {
   page: Page;

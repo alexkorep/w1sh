@@ -6,6 +6,7 @@ import Arrival from "./pages/Arrival";
 import TitleScreen from "./pages/TitleScreen";
 import Elite from "./pages/Elite";
 import Pinball from "./pages/Pinball";
+import TicTacToe from "./pages/TicTacToe";
 import Console from "./pages/Console";
 import Home from "./pages/Home";
 
@@ -62,6 +63,8 @@ function App() {
         <Elite />
       ) : page === "pinball" ? (
         <Pinball onExit={() => setPage("console")} />
+      ) : page === "tictactoe" ? (
+        <TicTacToe onExit={() => setPage("console")} />
       ) : (
         <Console newGame={newGame} runGame={setPage} />
       )}
