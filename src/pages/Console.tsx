@@ -175,7 +175,9 @@ export default function Console({ newGame, runGame: runPage }: ConsoleProps): JS
   .chip:active{ transform:translateY(1px); box-shadow:0 2px 0 #2a2a2a, 0 0 0 2px #202020 inset; }
 
   .pinball-overlay{ position:fixed; inset:0; background:#0b0f1a; display:flex; flex-direction:column; z-index:999; }
-  .pinball-overlay .pinball-area{ flex:1 1 auto; }
+  .pinball-overlay .pinball-area{ flex:1 1 auto; display:flex; }
+  .pinball-overlay .crt{ flex:1 1 auto; min-height:0; max-height:none; margin:8px; }
+  .pinball-overlay .crt .inner{ overflow:hidden; }
   .pinball-overlay .bar{ margin:8px; }
 
   /* --- Keyboard --- */
@@ -220,12 +222,26 @@ export default function Console({ newGame, runGame: runPage }: ConsoleProps): JS
       {activeGame === "pinball" && (
         <div className="pinball-overlay">
           <div className="pinball-area">
-            <Pinball
-              onExit={() => {
-                setActiveGame(null);
-                startPrompt();
-              }}
-            />
+            <div className="crt">
+              <div className="inner">
+                <Pinball
+                  onExit={() => {
+                    setActiveGame(null);
+                    startPrompt();
+                  }}
+                />
+              </div>
+              <div className="function-keys">
+                {pinballChipCommands.map((c, i) => (
+                  <span key={i}>
+                    <b className="f-num">{`F${i + 1}`}</b>
+                    {c.text}
+                  </span>
+                ))}
+              </div>
+              <div className="glass" />
+              <div className="vignette" />
+            </div>
           </div>
           <CommandChips chipCommands={pinballChipCommands} />
         </div>
