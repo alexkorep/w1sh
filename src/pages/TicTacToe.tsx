@@ -167,6 +167,13 @@ export default function TicTacToe({
       }, 800 + Math.random() * 500);
     }
 
+    function computerRandomStart() {
+      const availableMoves = getAvailableMoves(board);
+      const randomIndex = Math.floor(Math.random() * availableMoves.length);
+      const randomMove = availableMoves[randomIndex];
+      updateBoard(randomMove, computer);
+    }
+
     function handleInnerCellClick(e: Event) {
       const target = e.target as HTMLElement;
       const index5x5 = parseInt(target.getAttribute("data-index") || "0", 10);
@@ -202,7 +209,7 @@ export default function TicTacToe({
         cell.textContent = "";
         cell.classList.remove("x", "o");
       });
-      computerMove();
+      computerRandomStart();
     }
 
     allCells.forEach((cell) => {
@@ -342,7 +349,6 @@ export default function TicTacToe({
         .outer-cell {
             border: 1px dashed transparent;
             animation: border-flicker 2s linear infinite;
-            cursor: help;
         }
 
         .outer-cell:hover {
