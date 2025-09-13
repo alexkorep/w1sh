@@ -236,11 +236,6 @@ export default function TicTacToe({ onExit }: { onExit: () => void }): JSX.Eleme
             100% { opacity: 1; }
         }
 
-        @keyframes blink {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0; }
-        }
-
         @keyframes border-flicker {
             0% { border-color: var(--crt-glitch); }
             50% { border-color: transparent; }
@@ -322,11 +317,6 @@ export default function TicTacToe({ onExit }: { onExit: () => void }): JSX.Eleme
         .inner-cell:not(.x):not(.o):hover::after {
             content: 'O';
             opacity: 0.3;
-        }
-
-        .inner-cell:empty::after {
-            content: '_';
-            animation: blink 1s step-end infinite;
         }
 
         /* --- Style for the hidden outer cells --- */
