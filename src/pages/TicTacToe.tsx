@@ -26,24 +26,26 @@ export default function TicTacToe({ onExit }: { onExit: () => void }): JSX.Eleme
       [2, 4, 6],
     ];
 
-    const hiddenWinConditions: Record<number, [number, number]> = {
-      0: [4, 8],
-      4: [4, 6],
-      20: [2, 4],
-      24: [0, 4],
-      1: [3, 6],
-      2: [4, 7],
-      3: [5, 8],
-      21: [0, 3],
-      22: [1, 4],
-      23: [2, 5],
-      5: [1, 2],
-      10: [4, 5],
-      15: [7, 8],
-      9: [0, 1],
-      14: [3, 4],
-      19: [6, 7],
-    };
+    function canWinByOuterMove(index5x5: number) {
+      const x = index5x5 % 5;
+      const y = Math.floor(index5x5 / 5);
+
+      const dx = x < 1 ? 1 : x > 3 ? -1 : 0;
+      const dy = y < 1 ? 1 : y > 3 ? -1 : 0;
+
+      const step2x = x + 2 * dx;
+      const step2y = y + 2 * dy;
+      const step3x = x + 3 * dx;
+      const step3y = y + 3 * dy;
+
+      const inside = (sx: number, sy: number) => sx >= 1 && sx <= 3 && sy >= 1 && sy <= 3;
+      if (inside(step2x, step2y) && inside(step3x, step3y)) {
+        const idx2 = (step2y - 1) * 3 + (step2x - 1);
+        const idx3 = (step3y - 1) * 3 + (step3x - 1);
+        return board[idx2] === player && board[idx3] === player;
+      }
+      return false;
+    }
 
     function checkWinner(currentBoard: string[], mark: string) {
       return winningConditions.some((condition) =>
@@ -162,15 +164,11 @@ export default function TicTacToe({ onExit }: { onExit: () => void }): JSX.Eleme
 
       const target = e.target as HTMLElement;
       const index5x5 = parseInt(target.getAttribute("data-index") || "0", 10);
-      const condition = hiddenWinConditions[index5x5];
 
-      if (condition) {
-        const [req1, req2] = condition;
-        if (board[req1] === player && board[req2] === player) {
-          target.textContent = player;
-          target.classList.add(player.toLowerCase());
-          endGame("!! ANOMALY DETECTED. PLAYER WINS. !!");
-        }
+      if (canWinByOuterMove(index5x5)) {
+        target.textContent = player;
+        target.classList.add(player.toLowerCase());
+        endGame("!! ANOMALY DETECTED. PLAYER WINS. !!");
       }
     }
 
