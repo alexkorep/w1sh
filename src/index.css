@@ -1,15 +1,17 @@
+:root {
+  --app-scale: 1;
+}
+
 body {
   margin: 0;
   font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
   line-height: 1.5;
   background: #000;
+  overflow: hidden;
 }
 
 #root {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  padding: 0;
+  position: relative;
   width: 100vw;
   height: 100vh;
 }

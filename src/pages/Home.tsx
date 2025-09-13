@@ -161,7 +161,7 @@ export default function Home({ onNewGame, onContinue }: HomeProps): JSX.Element 
 
   /* --- Game Title --- */
   .game-title {
-    font-size: 12vw; /* Responsive font size */
+    font-size: 44px;
     font-weight: normal;
     letter-spacing: 0.5rem;
     text-shadow:
@@ -197,7 +197,7 @@ export default function Home({ onNewGame, onContinue }: HomeProps): JSX.Element 
     display: inline-block;
     color: #00ff41;
     text-decoration: none;
-    font-size: 5vw; /* Responsive font size */
+    font-size: 18px;
     padding: 0.5rem 1rem;
     margin: 0.5rem 0;
     transition: all 0.2s ease-in-out;

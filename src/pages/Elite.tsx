@@ -12,8 +12,8 @@ export default function Elite(): JSX.Element {
       font-size: 10px;
       line-height: 1.6;
       position: relative;
-      width: 100vw;
-      height: 100vh;
+      width: 100%;
+      height: 100%;
     }
     canvas {
       display: block;

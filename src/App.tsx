@@ -24,6 +24,22 @@ function App() {
   } = useGameState();
 
   useEffect(() => {
+    const updateScale = () => {
+      const scale = Math.min(
+        window.innerWidth / 360,
+        window.innerHeight / 640
+      );
+      document.documentElement.style.setProperty(
+        "--app-scale",
+        scale.toString()
+      );
+    };
+    updateScale();
+    window.addEventListener("resize", updateScale);
+    return () => window.removeEventListener("resize", updateScale);
+  }, []);
+
+  useEffect(() => {
     const handleFullscreenChange = () => {
       if (!document.fullscreenElement) {
         setShowHome(true);
