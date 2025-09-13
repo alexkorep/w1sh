@@ -1,6 +1,6 @@
 export default function AdPage({ onMessageSeller, onBuyNow }: { onMessageSeller: () => void; onBuyNow: () => void }): JSX.Element {
   const css = `
-    :root{
+    .ad-page{
       /* Color scheme inspired by the screenshot */
       --bg:#0f1720;            /* page background */
       --panel:#111b25;         /* cards, bars */
@@ -15,70 +15,73 @@ export default function AdPage({ onMessageSeller, onBuyNow }: { onMessageSeller:
       --border:#1e2937;        /* hairline */
       --shadow: 0 8px 30px rgba(0,0,0,.35);
       --radius:16px;
+      margin:0;
+      background:var(--bg);
+      color:var(--text);
+      font:16px/1.45 system-ui, -apple-system, Segoe UI, Roboto, Inter,Arial, sans-serif;
     }
-    *{box-sizing:border-box}
-    html,body{margin:0;background:var(--bg);color:var(--text);font:16px/1.45 system-ui, -apple-system, Segoe UI, Roboto, Inter,Arial, sans-serif}
-    a{color:var(--accent);text-decoration:none}
-    .wrap{max-width:960px;margin-inline:auto;padding:12px 12px 72px}
+    .ad-page *{box-sizing:border-box}
+    .ad-page a{color:var(--accent);text-decoration:none}
+    .ad-page .wrap{max-width:960px;margin-inline:auto;padding:12px 12px 72px}
 
     /* Top app bar */
-    .appbar{position:sticky;top:0;z-index:10;background:linear-gradient(180deg,var(--panel),var(--panel-2));box-shadow:var(--shadow);}
-    .appbar-inner{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 16px}
-    .brand{display:flex;align-items:center;gap:10px;font-weight:700;letter-spacing:.2px}
-    .logo{display:grid;place-items:center;width:32px;height:32px;border-radius:10px;background:var(--accent);color:#fff;font-weight:800}
-    .brand .name{font-size:20px}
-    .safety{color:var(--muted);font-size:14px;display:none}
-    @media (min-width:480px){.safety{display:block}}
+    .ad-page .appbar{position:sticky;top:0;z-index:10;background:linear-gradient(180deg,var(--panel),var(--panel-2));box-shadow:var(--shadow);}
+    .ad-page .appbar-inner{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 16px}
+    .ad-page .brand{display:flex;align-items:center;gap:10px;font-weight:700;letter-spacing:.2px}
+    .ad-page .logo{display:grid;place-items:center;width:32px;height:32px;border-radius:10px;background:var(--accent);color:#fff;font-weight:800}
+    .ad-page .brand .name{font-size:20px}
+    .ad-page .safety{color:var(--muted);font-size:14px;display:none}
+    @media (min-width:480px){.ad-page .safety{display:block}}
 
     /* Listing header */
-    .listing-head{display:flex;align-items:center;justify-content:space-between;gap:10px;background:var(--panel);padding:12px 14px;border:1px solid var(--border);border-radius:12px;margin:12px auto}
-    .listing-title{font-size:18px;font-weight:700;}
-    .listing-sub{color:var(--muted);font-size:14px}
-    .order{color:var(--muted);font-weight:600}
+    .ad-page .listing-head{display:flex;align-items:center;justify-content:space-between;gap:10px;background:var(--panel);padding:12px 14px;border:1px solid var(--border);border-radius:12px;margin:12px auto}
+    .ad-page .listing-title{font-size:18px;font-weight:700;}
+    .ad-page .listing-sub{color:var(--muted);font-size:14px}
+    .ad-page .order{color:var(--muted);font-weight:600}
 
     /* Grid */
-    .grid{display:grid;gap:14px}
+    .ad-page .grid{display:grid;gap:14px}
     @media (min-width:720px){
-      .grid{grid-template-columns: 1.05fr .95fr}
+      .ad-page .grid{grid-template-columns: 1.05fr .95fr}
     }
 
     /* Media card */
-    .card{background:var(--panel);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow)}
-    .media{position:relative;overflow:hidden}
-    .media-meta{display:flex;justify-content:space-between;align-items:center;padding:10px 12px;color:var(--muted);font-size:13px}
+    .ad-page .card{background:var(--panel);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow)}
+    .ad-page .media{position:relative;overflow:hidden}
+    .ad-page .media-meta{display:flex;justify-content:space-between;align-items:center;padding:10px 12px;color:var(--muted);font-size:13px}
 
     /* Details */
-    .pad{padding:14px 16px}
-    .price{display:flex;align-items:baseline;gap:8px}
-    .price .amount{font-size:28px;font-weight:800}
-    .price .chip{background:var(--chip);padding:4px 8px;border-radius:999px;color:var(--accent-2);font-size:12px;border:1px solid var(--border)}
+    .ad-page .pad{padding:14px 16px}
+    .ad-page .price{display:flex;align-items:baseline;gap:8px}
+    .ad-page .price .amount{font-size:28px;font-weight:800}
+    .ad-page .price .chip{background:var(--chip);padding:4px 8px;border-radius:999px;color:var(--accent-2);font-size:12px;border:1px solid var(--border)}
 
-    .cta{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}
-    .btn{appearance:none;border:none;border-radius:12px;padding:12px 14px;font-weight:700;cursor:pointer}
-    .btn.primary{background:var(--accent);color:#fff}
-    .btn.ghost{background:transparent;color:var(--text);border:1px solid var(--border)}
+    .ad-page .cta{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}
+    .ad-page .btn{appearance:none;border:none;border-radius:12px;padding:12px 14px;font-weight:700;cursor:pointer}
+    .ad-page .btn.primary{background:var(--accent);color:#fff}
+    .ad-page .btn.ghost{background:transparent;color:var(--text);border:1px solid var(--border)}
 
     /* Info blocks */
-    .info{display:grid;gap:10px}
-    .blk{background:var(--panel);border:1px solid var(--border);border-radius:12px}
-    .blk h3{margin:0 0 6px 0;font-size:16px}
-    .specs{display:grid;grid-template-columns:1fr;gap:8px}
-    .row{display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px dashed var(--border)}
-    .row:last-child{border-bottom:none}
-    .row .k{color:var(--muted)}
+    .ad-page .info{display:grid;gap:10px}
+    .ad-page .blk{background:var(--panel);border:1px solid var(--border);border-radius:12px}
+    .ad-page .blk h3{margin:0 0 6px 0;font-size:16px}
+    .ad-page .specs{display:grid;grid-template-columns:1fr;gap:8px}
+    .ad-page .row{display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px dashed var(--border)}
+    .ad-page .row:last-child{border-bottom:none}
+    .ad-page .row .k{color:var(--muted)}
 
-    .seller{display:flex;align-items:center;gap:12px}
-    .avatar{width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,var(--accent),#5b8cff)}
-    .seller .meta{display:flex;flex-direction:column}
-    .badge{display:inline-block;background:var(--chip);border:1px solid var(--border);padding:2px 8px;border-radius:999px;color:var(--muted);font-size:12px}
+    .ad-page .seller{display:flex;align-items:center;gap:12px}
+    .ad-page .avatar{width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,var(--accent),#5b8cff)}
+    .ad-page .seller .meta{display:flex;flex-direction:column}
+    .ad-page .badge{display:inline-block;background:var(--chip);border:1px solid var(--border);padding:2px 8px;border-radius:999px;color:var(--muted);font-size:12px}
 
     /* Footer */
-    footer{margin:28px auto 0;color:var(--muted);font-size:13px;text-align:center}
-    .tiny{opacity:.8}
+    .ad-page footer{margin:28px auto 0;color:var(--muted);font-size:13px;text-align:center}
+    .ad-page .tiny{opacity:.8}
   `;
 
   return (
-    <div>
+    <div className="ad-page">
       <style>{css}</style>
       <header className="appbar">
         <div className="appbar-inner wrap" style={{ paddingInline: "12px" }}>

@@ -14,14 +14,10 @@ export default function ConsoleScreen({
   className = "",
 }: PropsWithChildren<{ className?: string }>) {
   const css = `
-  /* Inherit the same palette as your main console for consistency */
-  :root{
-    --screen-bg:#001400;
-    --phosphor:#00ff80;
-  }
-
   /* Local scope wrapper so styles can be co-located without leaking */
   .console-screen {
+    --screen-bg:#001400;
+    --phosphor:#00ff80;
     width: 100%;
     height: 100%;
     overflow: auto;

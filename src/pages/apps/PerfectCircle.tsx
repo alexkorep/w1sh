@@ -163,12 +163,10 @@ export default function PerfectCircle(): JSX.Element {
 
   const css = `
   @import url('https://fonts.googleapis.com/css2?family=VT323&display=swap');
-  :root {
+  .crt-container {
     --crt-bg: #0a0e0a;
     --crt-fg: #00ff41;
     --crt-fg-dim: #008021;
-  }
-  html, body {
     margin: 0;
     padding: 0;
     overflow: hidden;
@@ -178,11 +176,7 @@ export default function PerfectCircle(): JSX.Element {
     color: var(--crt-fg);
     font-family: 'VT323', monospace;
     cursor: crosshair;
-  }
-  .crt-container {
     position: relative;
-    width: 100%;
-    height: 100%;
     display: flex;
     flex-direction: column;
     justify-content: center;
