@@ -828,7 +828,6 @@ export default function Pinball({ onExit: _onExit }: { onExit: () => void }): JS
         <div className="panel" id="score">Score: {score}</div>
         <div className="panel" id="balls">Balls: ∞</div>
       </div>
-      <div id="hint">Tap left/right to flip • Higher bumpers pay up to 1000x • F5 Exit</div>
     </div>
   );
 }
