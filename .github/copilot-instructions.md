@@ -47,7 +47,7 @@ These guidelines capture the project-specific architecture and conventions for t
 6. Optionally craft chip shortcut by adding `.EXE` in current dir so RUN mode lists it.
 
 ## Build & Dev
-- Scripts: `npm run dev` (Vite), `npm run build` (TypeScript compile then Vite), `npm run preview` (serve build). No tests currently; avoid inventing a test harness unless requested.
+- Scripts: `yarn dev` (Vite), `yarn build` (TypeScript compile then Vite), `yarn preview` (serve build). No tests currently; avoid inventing a test harness unless requested.
 - Service worker auto-registered on load for PWA-like caching; keep path relative to `import.meta.env.BASE_URL`.
 
 ## Style & Implementation Notes

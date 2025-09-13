@@ -7,19 +7,19 @@ A simple React application built with [Vite](https://vitejs.dev/) and TypeScript
 1. Install dependencies:
 
    ```bash
-   npm install
+   yarn install
    ```
 
 2. Start the development server:
 
    ```bash
-   npm run dev
+   yarn dev
    ```
 
 3. Create a production build:
 
    ```bash
-   npm run build
+   yarn build
    ```
 
 ## Deployment
@@ -29,6 +29,6 @@ This project is deployed to GitHub Pages. The site is automatically built and pu
 To preview the production build locally:
 
 ```bash
-npm run build
-npm run preview
+yarn build
+yarn preview
 ```
