@@ -9,10 +9,8 @@ describe('canWinByOuterMove', () => {
       "O", "",  ""
     ];
     const index5x5 = 8; // Corresponds to board index 2
-    // This move should win because it completes the diagonal O-O-O
-    const tempBoard = [...board];
-    tempBoard[2] = "O";
-    expect(canWinByOuterMove(board, index5x5)).toBe(true);
+    const player = "O";
+    expect(canWinByOuterMove(index5x5, board, player)).toBe(true);
   });
 
   it('should return true for the user-provided failing case', () => {
@@ -22,7 +20,8 @@ describe('canWinByOuterMove', () => {
         "X", "",  ""
     ];
     const index5x5 = 4; // Top-right outer cell
-    expect(canWinByOuterMove(board, index5x5)).toBe(true);
+    const player = "O";
+    expect(canWinByOuterMove(index5x5, board, player)).toBe(true);
   });
 
   it('should return false if the move does not result in a win', () => {
@@ -32,7 +31,8 @@ describe('canWinByOuterMove', () => {
       "O", "X", ""
     ];
     const index5x5 = 8; // Corresponds to board index 2, which is not a winning move
-    expect(canWinByOuterMove(board, index5x5)).toBe(false);
+    const player = "O";
+    expect(canWinByOuterMove(index5x5, board, player)).toBe(false);
   });
 
   it('should return false if the target cell is already occupied', () => {
@@ -42,7 +42,8 @@ describe('canWinByOuterMove', () => {
       "X", "", ""
     ];
     const index5x5 = 8; // Corresponds to board index 2, which is 'X'
-    expect(canWinByOuterMove(board, index5x5)).toBe(false);
+    const player = "O";
+    expect(canWinByOuterMove(index5x5, board, player)).toBe(false);
   });
 
   it('should return true for a winning move on the left edge', () => {
@@ -52,17 +53,19 @@ describe('canWinByOuterMove', () => {
       "X", "O", "X"
     ];
     const index5x5 = 11; // left edge, middle row, corresponds to index 3
-    expect(canWinByOuterMove(board, index5x5)).toBe(true);
+    const player = "O";
+    expect(canWinByOuterMove(index5x5, board, player)).toBe(true);
   });
 
-    it('should return true for a winning move on the bottom edge', () => {
+  it('should return true for a winning move on the bottom edge', () => {
     const board = [
       "X", "O", "X",
       "O", "",  "O",
       "",  "X", ""
     ];
     const index5x5 = 21; // Bottom edge, second column, corresponds to index 7
-    expect(canWinByOuterMove(board, index5x5)).toBe(true);
+    const player = "O";
+    expect(canWinByOuterMove(index5x5, board, player)).toBe(true);
   });
 
   it('should handle various non-winning scenarios', () => {
@@ -71,20 +74,21 @@ describe('canWinByOuterMove', () => {
       "", "O", "",
       "X", "", ""
     ];
+    const player = "O";
     // All outer cells that don't lead to a win
-    expect(canWinByOuterMove(board, 0)).toBe(false);
-    expect(canWinByOuterMove(board, 1)).toBe(false);
-    expect(canWinByOuterMove(board, 2)).toBe(false);
-    expect(canWinByOuterMove(board, 3)).toBe(false);
-    expect(canWinByOuterMove(board, 5)).toBe(false);
-    expect(canWinByOuterMove(board, 9)).toBe(false);
-    expect(canWinByOuterMove(board, 10)).toBe(false);
-    expect(canWinByOuterMove(board, 14)).toBe(false);
-    expect(canWinByOuterMove(board, 15)).toBe(false);
-    expect(canWinByOuterMove(board, 19)).toBe(false);
-    expect(canWinByOuterMove(board, 20)).toBe(false);
-    expect(canWinByOuterMove(board, 22)).toBe(false);
-    expect(canWinByOuterMove(board, 23)).toBe(false);
-    expect(canWinByOuterMove(board, 24)).toBe(false);
+    expect(canWinByOuterMove(0, board, player)).toBe(false);
+    expect(canWinByOuterMove(1, board, player)).toBe(false);
+    expect(canWinByOuterMove(2, board, player)).toBe(false);
+    expect(canWinByOuterMove(3, board, player)).toBe(false);
+    expect(canWinByOuterMove(5, board, player)).toBe(false);
+    expect(canWinByOuterMove(9, board, player)).toBe(false);
+    expect(canWinByOuterMove(10, board, player)).toBe(false);
+    expect(canWinByOuterMove(14, board, player)).toBe(false);
+    expect(canWinByOuterMove(15, board, player)).toBe(false);
+    expect(canWinByOuterMove(19, board, player)).toBe(false);
+    expect(canWinByOuterMove(20, board, player)).toBe(false);
+    expect(canWinByOuterMove(22, board, player)).toBe(false);
+    expect(canWinByOuterMove(23, board, player)).toBe(false);
+    expect(canWinByOuterMove(24, board, player)).toBe(false);
   });
 });
