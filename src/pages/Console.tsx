@@ -174,7 +174,7 @@ export default function Console({ newGame, runGame: runPage }: ConsoleProps): JS
   .chip{ background:linear-gradient(180deg, #555, #444); color:#dcdcdc; border:1px solid #333; border-bottom-color:#222; border-radius:6px; padding:8px 0; font-weight:normal; letter-spacing:.6px; box-shadow:0 3px 0 #2a2a2a, 0 0 0 2px #202020 inset; text-transform:uppercase; user-select:none; touch-action:manipulation; -webkit-tap-highlight-color:transparent; cursor:pointer; text-align:center; }
   .chip:active{ transform:translateY(1px); box-shadow:0 2px 0 #2a2a2a, 0 0 0 2px #202020 inset; }
 
-  .pinball-overlay{ position:fixed; inset:0; background:#0b0f1a; display:flex; flex-direction:column; z-index:999; }
+  .pinball-overlay{ position:fixed; inset:0; background:#000000; display:flex; flex-direction:column; z-index:999; --screen-bg:#000000; --phosphor:#55ffff; --phosphor-dim:#00aaaa; }
   .pinball-overlay .pinball-area{ flex:1 1 auto; display:flex; }
   .pinball-overlay .crt{ flex:1 1 auto; min-height:0; max-height:none; margin:8px; }
   .pinball-overlay .crt .inner{ overflow:hidden; }

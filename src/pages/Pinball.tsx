@@ -9,14 +9,14 @@ export default function Pinball({ onExit: _onExit }: { onExit: () => void }): JS
         position: relative;
         width: 100%;
         height: 100%;
-        background: #0b0f1a;
+        background: #000000;
         overflow: hidden;
         touch-action: none;
         -webkit-user-select: none;
         user-select: none;
         font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial,
           sans-serif;
-        color: #e6edf3;
+        color: #55ffff;
       }
       .pinball-container #ui {
         position: absolute;
@@ -28,9 +28,9 @@ export default function Pinball({ onExit: _onExit }: { onExit: () => void }): JS
         padding: 10px;
       }
       .pinball-container .panel {
-        background: rgba(0, 0, 0, 0.25);
+        background: rgba(0, 170, 170, 0.2);
         backdrop-filter: blur(4px);
-        border: 1px solid rgba(255, 255, 255, 0.08);
+        border: 1px solid rgba(85, 255, 255, 0.25);
         border-radius: 12px;
         padding: 8px 12px;
         font-weight: 600;
@@ -45,8 +45,8 @@ export default function Pinball({ onExit: _onExit }: { onExit: () => void }): JS
         font-size: 14px;
         opacity: 0.85;
         letter-spacing: 0.2px;
-        background: rgba(255, 255, 255, 0.08);
-        border: 1px solid rgba(255, 255, 255, 0.12);
+        background: rgba(0, 170, 170, 0.2);
+        border: 1px solid rgba(85, 255, 255, 0.25);
         padding: 6px 10px;
         border-radius: 10px;
       }
@@ -239,8 +239,8 @@ export default function Pinball({ onExit: _onExit }: { onExit: () => void }): JS
               this.y,
               this.r
             );
-            grd.addColorStop(0, "#fafcff");
-            grd.addColorStop(1, "#9aa4b4");
+            grd.addColorStop(0, "#ffffff");
+            grd.addColorStop(1, "#aaaaaa");
             ctx.fillStyle = grd;
             ctx.beginPath();
             ctx.arc(this.x, this.y, this.r, 0, Math.PI * 2);
@@ -331,7 +331,7 @@ export default function Pinball({ onExit: _onExit }: { onExit: () => void }): JS
             }
           }
           draw() {
-            ctx.fillStyle = "rgba(30,34,46,0.9)";
+            ctx.fillStyle = "rgba(0,0,0,0.9)";
             ctx.beginPath();
             ctx.arc(this.px, this.py, this.R * 1.2, 0, Math.PI * 2);
             ctx.fill();
@@ -357,7 +357,7 @@ export default function Pinball({ onExit: _onExit }: { onExit: () => void }): JS
               true
             );
             const grad = ctx.createLinearGradient(this.px, this.py, ex, ey);
-            grad.addColorStop(0, this.isLeft ? "#ff3366" : "#4dd0ff");
+            grad.addColorStop(0, this.isLeft ? "#ff55ff" : "#55ffff");
             grad.addColorStop(1, "#ffffff");
             ctx.fillStyle = grad;
             ctx.fill();
@@ -427,7 +427,7 @@ export default function Pinball({ onExit: _onExit }: { onExit: () => void }): JS
             ctx.globalAlpha = Math.max(0, p.life * 3);
             ctx.beginPath();
             ctx.arc(p.x, p.y, 2, 0, Math.PI * 2);
-            ctx.fillStyle = "#ffd166";
+            ctx.fillStyle = "#ffff55";
             ctx.fill();
           }
           ctx.restore();
@@ -470,7 +470,7 @@ export default function Pinball({ onExit: _onExit }: { onExit: () => void }): JS
             // soft glow for readability
             ctx.shadowColor = "rgba(0,0,0,0.6)";
             ctx.shadowBlur = 8;
-            ctx.fillStyle = "#ffd166";
+            ctx.fillStyle = "#ffff55";
             ctx.fillText(d.text ?? "", d.x, d.y);
           }
           ctx.restore();
@@ -574,8 +574,8 @@ export default function Pinball({ onExit: _onExit }: { onExit: () => void }): JS
 
         function drawPlayfield() {
           const g = ctx.createLinearGradient(0, 0, 0, H);
-          g.addColorStop(0, "#0f1a2e");
-          g.addColorStop(1, "#06111f");
+          g.addColorStop(0, "#0000aa");
+          g.addColorStop(1, "#000000");
           ctx.fillStyle = g;
           // Background for full world; outer draw() clips to viewport
           ctx.fillRect(0, 0, W, H);
@@ -600,20 +600,20 @@ export default function Pinball({ onExit: _onExit }: { onExit: () => void }): JS
               halo = r * (1 + b.pulse * 0.7);
             ctx.beginPath();
             ctx.arc(b.x, b.y, halo, 0, Math.PI * 2);
-            ctx.fillStyle = "rgba(255, 213, 102, 0.10)";
+            ctx.fillStyle = "rgba(255, 255, 85, 0.10)";
             ctx.fill();
 
             ctx.beginPath();
             ctx.arc(b.x, b.y, r, 0, Math.PI * 2);
             const rg = ctx.createRadialGradient(b.x, b.y, r * 0.2, b.x, b.y, r);
-            rg.addColorStop(0, "#ffd166");
-            rg.addColorStop(1, "#e65100");
+            rg.addColorStop(0, "#ffff55");
+            rg.addColorStop(1, "#aa5500");
             ctx.fillStyle = rg;
             ctx.fill();
 
             ctx.beginPath();
             ctx.arc(b.x, b.y, r * 0.25, 0, Math.PI * 2);
-            ctx.fillStyle = "#222";
+            ctx.fillStyle = "#000000";
             ctx.fill();
           }
         }
