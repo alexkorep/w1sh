@@ -159,8 +159,14 @@ export default function TicTacToe({
       document.body.style.pointerEvents = "none";
 
       setTimeout(() => {
-        const bestMove = minimax(board, computer);
-        updateBoard(bestMove.index, computer);
+        let moveIndex: number;
+        if (board.every((cell) => cell === "")) {
+          const firstMoves = [2, 6, 8];
+          moveIndex = firstMoves[Math.floor(Math.random() * firstMoves.length)];
+        } else {
+          moveIndex = minimax(board, computer).index;
+        }
+        updateBoard(moveIndex, computer);
         if (checkResult()) return;
         statusMessage.textContent = "YOUR TURN (O)";
         document.body.style.pointerEvents = "auto";
@@ -342,7 +348,7 @@ export default function TicTacToe({
         .outer-cell {
             border: 1px dashed transparent;
             animation: border-flicker 2s linear infinite;
-            cursor: help;
+            cursor: default;
         }
 
         .outer-cell:hover {
