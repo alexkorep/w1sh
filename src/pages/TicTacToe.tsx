@@ -1,11 +1,53 @@
 import { useEffect } from "react";
 
-export default function TicTacToe({ onExit }: { onExit: () => void }): JSX.Element {
+export function canWinByOuterMove(
+  index5x5: number,
+  board: string[],
+  player: string
+): boolean {
+  const x = index5x5 % 5;
+  const y = Math.floor(index5x5 / 5);
+
+  const dx = x < 1 ? 1 : x > 3 ? -1 : 0;
+  const dy = y < 1 ? 1 : y > 3 ? -1 : 0;
+
+  // must actually be on the border
+  if (dx === 0 && dy === 0) return false;
+
+  const inside = (sx: number, sy: number) =>
+    sx >= 1 && sx <= 3 && sy >= 1 && sy <= 3;
+
+  const s1x = x + dx,
+    s1y = y + dy;
+  const s2x = x + 2 * dx,
+    s2y = y + 2 * dy;
+
+  if (inside(s1x, s1y) && inside(s2x, s2y)) {
+    const idx1 = (s1y - 1) * 3 + (s1x - 1);
+    const idx2 = (s2y - 1) * 3 + (s2x - 1);
+    return board[idx1] === player && board[idx2] === player;
+  }
+  return false;
+}
+
+export default function TicTacToe({
+  onExit,
+}: {
+  onExit: () => void;
+}): JSX.Element {
   useEffect(() => {
-    const allCells = Array.from(document.querySelectorAll<HTMLDivElement>(".cell"));
-    const statusMessage = document.getElementById("status-message") as HTMLElement;
-    const restartButton = document.getElementById("restart-button") as HTMLButtonElement;
-    const exitButton = document.getElementById("exit-button") as HTMLButtonElement;
+    const allCells = Array.from(
+      document.querySelectorAll<HTMLDivElement>(".cell")
+    );
+    const statusMessage = document.getElementById(
+      "status-message"
+    ) as HTMLElement;
+    const restartButton = document.getElementById(
+      "restart-button"
+    ) as HTMLButtonElement;
+    const exitButton = document.getElementById(
+      "exit-button"
+    ) as HTMLButtonElement;
 
     const player = "O";
     const computer = "X";
@@ -25,25 +67,6 @@ export default function TicTacToe({ onExit }: { onExit: () => void }): JSX.Eleme
       [0, 4, 8],
       [2, 4, 6],
     ];
-
-    const hiddenWinConditions: Record<number, [number, number]> = {
-      0: [4, 8],
-      4: [4, 6],
-      20: [2, 4],
-      24: [0, 4],
-      1: [3, 6],
-      2: [4, 7],
-      3: [5, 8],
-      21: [0, 3],
-      22: [1, 4],
-      23: [2, 5],
-      5: [1, 2],
-      10: [4, 5],
-      15: [7, 8],
-      9: [0, 1],
-      14: [3, 4],
-      19: [6, 7],
-    };
 
     function checkWinner(currentBoard: string[], mark: string) {
       return winningConditions.some((condition) =>
@@ -162,15 +185,11 @@ export default function TicTacToe({ onExit }: { onExit: () => void }): JSX.Eleme
 
       const target = e.target as HTMLElement;
       const index5x5 = parseInt(target.getAttribute("data-index") || "0", 10);
-      const condition = hiddenWinConditions[index5x5];
 
-      if (condition) {
-        const [req1, req2] = condition;
-        if (board[req1] === player && board[req2] === player) {
-          target.textContent = player;
-          target.classList.add(player.toLowerCase());
-          endGame("!! ANOMALY DETECTED. PLAYER WINS. !!");
-        }
+      if (canWinByOuterMove(index5x5, board, player)) {
+        target.textContent = player;
+        target.classList.add(player.toLowerCase());
+        endGame("!! ANOMALY DETECTED. PLAYER WINS. !!");
       }
     }
 
@@ -403,4 +422,3 @@ export default function TicTacToe({ onExit }: { onExit: () => void }): JSX.Eleme
     </div>
   );
 }
-
