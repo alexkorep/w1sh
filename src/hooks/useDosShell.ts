@@ -293,6 +293,10 @@ export function useDosShell(
           println("Launching PINBALL.EXE...");
           runGame("pinball");
           return true;
+        case "tictactoe":
+          println("Launching TICTACTO.EXE...");
+          runGame("tictactoe");
+          return true;
         default:
           println("This program cannot be run in this DOS box.");
           return true;
