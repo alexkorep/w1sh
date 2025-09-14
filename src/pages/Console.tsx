@@ -1,7 +1,7 @@
 // @ts-nocheck
 import { useEffect, useState, useCallback, useMemo } from "react";
 import type { Page } from "../hooks/useGameState";
-import ConsoleScreen from "../components/ConsoleScreen";
+import TerminalScreen from "../components/TerminalScreen";
 import CommandChips from "../components/CommandChips";
 import VirtualKeyboard from "../components/VirtualKeyboard";
 import { useAudio } from "../hooks/useAudio";
@@ -148,7 +148,7 @@ export default function Console({ newGame, runGame: runPage }: ConsoleProps): JS
   .crt .inner{
     position:absolute; top: 14px; left: 14px; right: 14px; bottom: 38px; border-radius:12px; background: var(--screen-bg);
     box-shadow:0 0 0 2px rgba(0,0,0,.65) inset, 0 0 80px rgba(0,255,130,.06) inset, 0 0 220px rgba(0,200,100,.05) inset;
-    overflow:auto; -webkit-overflow-scrolling:touch; filter:saturate(90%) contrast(110%) brightness(95%);
+    overflow:hidden; filter:saturate(90%) contrast(110%) brightness(95%);
   }
   pre.screen{ margin:0; padding:16px 18px 40px; color:var(--phosphor); font-size:clamp(12px, 2.6vmin, 18px); text-shadow:0 0 6px rgba(0,255,130,.35), 0 0 18px rgba(0,255,100,.12);
     white-space:pre-wrap; word-wrap:break-word; }
@@ -247,7 +247,15 @@ export default function Console({ newGame, runGame: runPage }: ConsoleProps): JS
       <div className="wrap">
         <div className="crt">
           <div className="inner">
-            <ConsoleScreen>{renderWithCursor}</ConsoleScreen>
+            <TerminalScreen
+              cols={80}
+              rows={25}
+              content={renderWithCursor}
+              theme="matrix"
+              cellWidth={8}
+              cellHeight={16}
+              gap={0}
+            />
           </div>
           {!activeGame && (
             <div className="function-keys">
