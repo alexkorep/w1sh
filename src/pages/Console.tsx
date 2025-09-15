@@ -165,7 +165,7 @@ export default function Console({
 
   /* --- CRT Screen --- */
   .crt{
-    position:relative; flex:0 0 auto; aspect-ratio:4 / 3; width:100%; height:auto;
+    position:relative; flex:0 0 auto; aspect-ratio:3 / 4; width:100%; height:auto;
     margin: calc(.9 * var(--u)); border-radius: calc(2 * var(--u)); overflow:hidden;
     border: calc(.9 * var(--u)) solid var(--bezel);
     box-shadow:
@@ -264,7 +264,7 @@ export default function Console({
 
   /* --- Keyboard --- */
   /* Virtual keyboard: make buttons roughly half previous height by constraining container */
-  .rows{ display:flex; flex-direction:column; gap:calc(.6 * var(--u)); flex:0 0 25%; min-height:0; }
+  .rows{ display:flex; flex-direction:column; gap:calc(.6 * var(--u)); flex:0 0 50%; min-height:0; }
   .row{ display:flex; gap:calc(.6 * var(--u)); justify-content:center; flex:1 1 0; min-height:0; }
   .key{
     position:relative;
