@@ -146,7 +146,7 @@ export default function Console({ newGame, runGame: runPage }: ConsoleProps): JS
 
   /* --- CRT Screen --- */
   .crt{
-    position:relative; flex: 1 1 50%; min-height:40vh; max-height:60vh; margin:8px; border-radius:20px; overflow:hidden;
+    position:relative; flex:0 0 auto; aspect-ratio:4 / 3; width:100%; height:auto; margin:8px; border-radius:20px; overflow:hidden;
     border:8px solid var(--bezel); box-shadow:0 0 0 2px var(--bezel-edge) inset, 0 40px 80px rgba(0,0,0,.7), 0 12px 24px rgba(0,0,0,.8) inset;
     background:radial-gradient(120% 80% at 50% 50%, #001c00 0%, #000b00 75%);
   }
@@ -172,29 +172,32 @@ export default function Console({ newGame, runGame: runPage }: ConsoleProps): JS
   .status{ position:absolute; right:18px; top:10px; font-size:12px; color:#a9ffcd; opacity:.75; text-shadow:0 0 10px rgba(0,255,120,.25); }
 
   /* --- Command chips --- */
-  .kb{ flex:1 1 50%; min-height:38vh; margin:0 8px 10px; display:flex; flex-direction:column; gap:8px; }
+  .kb{ flex:1 1 auto; margin:0 8px 10px; display:flex; flex-direction:column; gap:8px; min-height:0; }
   .bar{ display:grid; grid-template-columns:repeat(5,1fr); gap:8px; justify-content:center; }
   .chip{ background:linear-gradient(180deg, #555, #444); color:#dcdcdc; border:1px solid #333; border-bottom-color:#222; border-radius:6px; padding:8px 0; font-weight:normal; letter-spacing:.6px; box-shadow:0 3px 0 #2a2a2a, 0 0 0 2px #202020 inset; text-transform:uppercase; user-select:none; touch-action:manipulation; -webkit-tap-highlight-color:transparent; cursor:pointer; text-align:center; }
   .chip:active{ transform:translateY(1px); box-shadow:0 2px 0 #2a2a2a, 0 0 0 2px #202020 inset; }
 
   .pinball-overlay{ position:fixed; inset:0; background:#0b0f1a; display:flex; flex-direction:column; z-index:999; }
   .pinball-overlay .pinball-area{ flex:1 1 auto; display:flex; }
-  .pinball-overlay .crt{ flex:1 1 auto; min-height:0; max-height:none; margin:8px; }
+  .pinball-overlay .crt{ flex:1 1 auto; aspect-ratio:auto; min-height:0; max-height:none; margin:8px; }
   .pinball-overlay .crt .inner{ overflow:hidden; }
   .pinball-overlay .bar{ margin:8px; }
 
   /* --- Keyboard --- */
-  .rows{ display:flex; flex-direction:column; gap:6px; flex:1; }
-  .row{ display:flex; gap:6px; justify-content:center; }
+  .rows{ display:flex; flex-direction:column; gap:6px; flex:1 1 auto; min-height:0; }
+  .row{ display:flex; gap:6px; justify-content:center; flex:1 1 0; min-height:0; }
   .key{
     position:relative;
-    flex:1 1 0; min-width:20px; padding:10px 0;
+    flex:1 1 0; min-width:20px; height:100%;
+    padding:0; /* vertical centering will rely on flex */
     background:linear-gradient(180deg, #555, #444);
     color:#dcdcdc; border:1px solid #333; border-bottom-color:#222; border-radius:6px;
     box-shadow:0 3px 0 #2a2a2a, 0 0 0 2px #202020 inset;
     text-align:center; user-select:none; touch-action:manipulation; -webkit-tap-highlight-color:transparent; cursor:pointer;
     display:flex; align-items:center; justify-content:center; transition: background .1s ease, color .1s ease;
+    font-size:clamp(12px, 2.2vmin, 18px);
   }
+  .key .char-main { line-height:1; }
   .key:active{ transform:translateY(1px); box-shadow:0 2px 0 #2a2a2a, 0 0 0 2px #202020 inset; }
   .key .char-main { font-size: clamp(16px, 3.5vmin, 22px); }
   .key .char-sym { position:absolute; top:2px; right:5px; font-size:clamp(11px, 2vmin, 14px); color:#a0a0a0; opacity:.9; }
@@ -216,6 +219,10 @@ export default function Console({ newGame, runGame: runPage }: ConsoleProps): JS
     .rows { gap: 5px; }
     .row { gap: 5px; }
     .key { border-radius: 6px; }
+  }
+  @media (max-height: 620px){
+    .rows { gap:4px; }
+    .row { gap:4px; }
   }
   `;
 
