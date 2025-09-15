@@ -263,7 +263,8 @@ export default function Console({
   .pinball-overlay .bar{ margin:calc(.9 * var(--u)); }
 
   /* --- Keyboard --- */
-  .rows{ display:flex; flex-direction:column; gap:calc(.6 * var(--u)); flex:1 1 auto; min-height:0; }
+  /* Virtual keyboard: make buttons roughly half previous height by constraining container */
+  .rows{ display:flex; flex-direction:column; gap:calc(.6 * var(--u)); flex:0 0 25%; min-height:0; }
   .row{ display:flex; gap:calc(.6 * var(--u)); justify-content:center; flex:1 1 0; min-height:0; }
   .key{
     position:relative;
