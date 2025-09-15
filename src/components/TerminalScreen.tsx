@@ -117,8 +117,8 @@ export default function TerminalScreen({
   cols,
   rows,
   content = "",
-  cellWidth = 12,
-  cellHeight = 20,
+  cellWidth,
+  cellHeight,
   gap = 0,
   theme = "classic",
   border = true,
@@ -137,6 +137,7 @@ export default function TerminalScreen({
     : -1;
 
   const totalCells = cols * rows;
+  const fixed = typeof cellWidth === "number" && typeof cellHeight === "number";
 
   return (
     <div
@@ -148,12 +149,18 @@ export default function TerminalScreen({
         className ?? "",
       ].join(" ")}
       style={{
-        width: cols * cellWidth,
-        height: rows * cellHeight,
+        width: fixed ? cols * cellWidth! : "100%",
+        height: fixed ? rows * cellHeight! : "100%",
         background: palette.bg,
         color: palette.fg,
         boxShadow: glow ? `0 0 24px ${palette.accent}33` : undefined,
         borderColor: border ? `${palette.accent}66` : undefined,
+        ...(fixed
+          ? {}
+          : {
+              ["--cw" as any]: `calc((100% - ${(cols - 1) * gap}px) / ${cols})`,
+              ["--ch" as any]: `calc((100% - ${(rows - 1) * gap}px) / ${rows})`,
+            }),
       }}
       aria-label={ariaLabel ?? "Terminal screen"}
       role="img"
@@ -176,25 +183,42 @@ export default function TerminalScreen({
           style={{
             backgroundImage:
               "linear-gradient(rgba(0,0,0,0.35) 1px, rgba(0,0,0,0) 1px)",
-            backgroundSize: `100% ${Math.max(2, Math.round(cellHeight / 2))}px`,
+            backgroundSize: fixed
+              ? `100% ${Math.max(2, Math.round(cellHeight! / 2))}px`
+              : "100% calc(var(--ch) / 2)",
           }}
         />
       )}
 
       <div
         className="absolute inset-0 font-mono"
-        style={{
-          display: "grid",
-          gridTemplateColumns: `repeat(${cols}, ${cellWidth}px)`,
-          gridTemplateRows: `repeat(${rows}, ${cellHeight}px)`,
-          gap,
-          lineHeight: `${cellHeight}px`,
-          fontSize: Math.max(10, Math.floor(cellHeight * 0.65)),
-          letterSpacing: `${Math.max(0, Math.floor(cellWidth * 0.02))}px`,
-          padding: 0,
-          margin: 0,
-          textShadow: glow ? `0 0 6px ${palette.accent}55` : undefined,
-        }}
+        style={
+          fixed
+            ? {
+                display: "grid",
+                gridTemplateColumns: `repeat(${cols}, ${cellWidth}px)`,
+                gridTemplateRows: `repeat(${rows}, ${cellHeight}px)`,
+                gap,
+                lineHeight: `${cellHeight}px`,
+                fontSize: Math.max(10, Math.floor(cellHeight! * 0.65)),
+                letterSpacing: `${Math.max(0, Math.floor(cellWidth! * 0.02))}px`,
+                padding: 0,
+                margin: 0,
+                textShadow: glow ? `0 0 6px ${palette.accent}55` : undefined,
+              }
+            : {
+                display: "grid",
+                gridTemplateColumns: `repeat(${cols}, var(--cw))`,
+                gridTemplateRows: `repeat(${rows}, var(--ch))`,
+                gap,
+                lineHeight: "var(--ch)",
+                fontSize: "calc(var(--ch) * 0.65)",
+                letterSpacing: "calc(var(--cw) * 0.02)",
+                padding: 0,
+                margin: 0,
+                textShadow: glow ? `0 0 6px ${palette.accent}55` : undefined,
+              }
+        }
       >
         {Array.from({ length: totalCells }).map((_, i) => {
           const r = Math.floor(i / cols);
@@ -210,8 +234,8 @@ export default function TerminalScreen({
                 isCursor ? "animate-term-cursor" : "",
               ].join(" ")}
               style={{
-                width: cellWidth,
-                height: cellHeight,
+                width: fixed ? cellWidth : "var(--cw)",
+                height: fixed ? cellHeight : "var(--ch)",
                 color: isCursor ? palette.bg : palette.fg,
                 background: isCursor ? palette.fg : "transparent",
               }}

@@ -252,8 +252,6 @@ export default function Console({ newGame, runGame: runPage }: ConsoleProps): JS
               rows={25}
               content={renderWithCursor}
               theme="matrix"
-              cellWidth={8}
-              cellHeight={16}
               gap={0}
             />
           </div>
