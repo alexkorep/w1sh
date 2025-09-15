@@ -1,5 +1,5 @@
 // @ts-nocheck
-import { useEffect, useState, useCallback, useMemo } from "react";
+import { useEffect, useState, useCallback, useMemo, useRef } from "react";
 import type { Page } from "../hooks/useGameState";
 import ConsoleScreen from "../components/ConsoleScreen";
 import CommandChips from "../components/CommandChips";
@@ -119,10 +119,15 @@ export default function Console({ newGame, runGame: runPage }: ConsoleProps): JS
   }, [activeGame, backspace, submit, upHistory, downHistory, handleChar, chipCommands]);
 
   // ---------- Boot sequence ----------
+  // Guard against React 18 StrictMode double-invoking effects in dev (which caused
+  // duplicate timed boot messages like "Starting MS-DOS..." while initial sync lines
+  // appeared once because the second invocation cleared and rewrote them).
+  const bootedRef = useRef(false);
   useEffect(() => {
+    if (bootedRef.current) return;
+    bootedRef.current = true;
     boot(false);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [boot]);
 
   // ---------- Styles (unchanged from your CSS) ----------
   const css = `
